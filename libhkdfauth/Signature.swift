@@ -19,7 +19,7 @@ extension Signature {
                 - data: The encoded data
             - Returns: The signature string
     */
-    public func derive(method: String, uri: String, salt: Bytes, date: Date, payload: Data?) -> String? {
+    public func derive(method: String, uri: String, salt: Bytes, date: Date, payload: Data) -> String {
         
         let sha256 = String(data: payload, encoding: .utf8)?
             .replacingOccurrences(of: "\\/", with: "/")
@@ -37,7 +37,7 @@ extension Signature {
         Generates a salt byte array of saltByte's length
             - Returns: Bytes
     */
-    public func generateSalt() -> Bytes? {
+    public func generateSalt() -> Bytes {
         return sodium.randomBytes.buf(length: saltBytes)!
     }
 }
