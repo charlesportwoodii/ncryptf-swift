@@ -23,26 +23,52 @@ extension Session {
         self.serverKey = sodium.utils.base642bin(serverKey)!
     }
 
-    private mutating func setServerKey(serverKey: Bytes) {
+    /**
+        Sets the server key when it changes
+        - parameters:
+            severKey: The byte interpretation of the server key
+    */
+    internal mutating func setServerKey(serverKey: Bytes) {
         self.serverKey = serverKey
     }
     
-    private mutating func setServerKey(serverKey: String) {
+    /**
+        Sets the server key when it changes
+        - parameters:
+            severKey: The string interpretation of the server key
+    */
+    internal mutating func setServerKey(serverKey: String) {
         self.serverKey = sodium.utils.base642bin(serverKey)!
     }
 
-    private func getPrivateKey() -> Bytes {
+    /**
+        Returns: The secret key bytes
+    */
+    internal func getPrivateKey() -> Bytes {
         return myKey.secretKey
     }
 
+    /**
+        Returns: Binary public key for the client
+    */
     public func getPublicKey() -> Bytes {
         return myKey.publicKey
     }
 
+    /**
+        Returns: Base64 encoded public key for the client
+    */
     public func getEncodedPublicKey() -> String {
         return sodium.utils.bin2base64(myKey.publicKey)!
     }
 
+    /**
+        Creates an encrypted request body
+        - parameters:
+            - payload: The payload data
+        Throws: EncryptionError.encryptionFailed
+        Returns: Base64 encoded payload
+    */
     public func encryptRequest(payload: Data) throws -> String {
         let nonce = sodium.box.nonce()
         let message = payload.bytes
@@ -59,6 +85,13 @@ extension Session {
         return sodium.utils.bin2base64(encrypted)!
     }
 
+    /**
+        Decrypts an API response and optionally checks the signature
+        - parameters:
+            - response: EncryptedResponse
+        Throws: SignatureVerificationError.invalidSignature
+        Returns: Decrypted response as a string. Data can be transformed from a string to an appropriate format
+    */
     public mutating func decryptResponse(response: EncryptedResponse) throws -> String? {
         self.setServerKey(serverKey: response.publicKey)
 

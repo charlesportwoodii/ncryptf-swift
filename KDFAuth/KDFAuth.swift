@@ -50,13 +50,14 @@ extension KDFAuth {
         - parameters:
             - publicKey: The base64 public key string returned from the server
             - nonce: The base64 encoded nonce string returned from the server
+            - hash: The X-Hashid header returned by the server
             - response: The base64 encoded raw response returned from the server
             - signature: The base64 signature header returned by the server to verify the authenticity of the response
             - signaturePublicKey: The base64 encoded signature public key header returned by the server
 
         Returns: EncryptedResponse object used to represent the response
     */
-    static public func createEncryptedResponse(publicKey: String, nonce: String, response: String, signature: String? = nil, signaturePublicKey: String? = nil) -> EncryptedResponse {
-        return EncryptedResponse(publicKey: publicKey, nonce: nonce, response: response, signature: signature, signaturePublicKey: signaturePublicKey)
+    static public func createEncryptedResponse(publicKey: String, nonce: String, hash: String, response: String, signature: String? = nil, signaturePublicKey: String? = nil) -> EncryptedResponse {
+        return EncryptedResponse(publicKey: publicKey, nonce: nonce, hash: hash, response: response, signature: signature, signaturePublicKey: signaturePublicKey)
     }
 }
