@@ -79,4 +79,16 @@ extension Authorization {
     public func getSignatureString() -> String? {
         return signature
     }
+
+    /**
+        Returns: V2 header string
+    */
+    public func getV2Header(token: Token) -> String? {
+        let salt = self.getEncodedSalt()!
+        let hmac = self.getEncodedHMAC()!
+
+        let auth = "{ \"access_token\": \"\(token.accessToken)\", \"hmac\": \"\(hmac)\", \"salt\": \"\(salt)\" }".utf8
+    
+        return sodium.utils.bin2base64([UInt8](auth))!
+    }
 }
