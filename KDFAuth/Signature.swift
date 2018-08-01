@@ -11,13 +11,13 @@ extension Signature {
 
     /**
         Derives a signature for hashing
-            - parameters:
-                - method: The HTTP method
-                - uri: The URI of the request
-                - bytes: The salt bytes
-                - date: The date
-                - data: The encoded data
-            - Returns: The signature string
+        - parameters:
+            - method: The HTTP method
+            - uri: The URI of the request
+            - bytes: The salt bytes
+            - date: The date
+            - data: The encoded data
+        Returns: The signature string
     */
     public func derive(method: String, uri: String, salt: Bytes, date: Date, payload: Data) -> String {
         
@@ -35,7 +35,7 @@ extension Signature {
 
     /**
         Generates a salt byte array of saltByte's length
-            - Returns: Bytes
+        Returns: Bytes
     */
     public func generateSalt() -> Bytes {
         return sodium.randomBytes.buf(length: saltBytes)!

@@ -24,7 +24,7 @@ extension Authorization {
             - tokens: The Token object containing the Initial Key Material, access and refresh tokens, and encryption strings
             - date: The current date. This should have an offset if the local time differs from the server time
             - payload: Raw payload data
-        - Throws: Key derivation error if the HMAC or HKDF cannot be calculated
+        Throws: Key derivation error if the HMAC or HKDF cannot be calculated
     */
     public init(method: String, uri: String, tokens: Token, date: Date, payload: Data) throws {
         self.date = date
@@ -53,28 +53,28 @@ extension Authorization {
     }
 
     /**
-        - Returns: signature string
+        Returns: signature string
     */
     public func getDateString() -> String? {
         return DateFormatter.rfc1123.string(from: date)
     }
     
     /**
-        - Returns: Base64 encoded HMAC
+        Returns: Base64 encoded HMAC
     */
     public func getEncodedHMAC() -> String? {
         return sodium.utils.bin2base64(hmac!)
     }
 
     /**
-        - Returns: Base64 encoded salt
+        Returns: Base64 encoded salt
     */
     public func getEncodedSalt() -> String? {
         return sodium.utils.bin2base64(salt)
     }
 
     /**
-        - Returns: Signature string
+        Returns: Signature string
     */
     public func getSignatureString() -> String? {
         return signature
