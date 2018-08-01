@@ -2,7 +2,6 @@ import Foundation
 import Sodium
 
 public struct KDFAuth {
-    
 }
 
 extension KDFAuth {
@@ -18,7 +17,7 @@ extension KDFAuth {
         - Throws: Key derivation error if the HMAC or HKDF cannot be calculated
         - Returns: Authorization
     */
-    public func getAuthorizationData(method: String, uri: String, tokens: Token, date: Date, payload: Data) throws -> Authorization {
+    static public func getAuthorizationData(method: String, uri: String, tokens: Token, date: Date, payload: Data) throws -> Authorization {
         return try Authorization(method: method, uri: uri, tokens: tokens, date: date, payload: payload)
     }
 
@@ -31,7 +30,33 @@ extension KDFAuth {
             - signature: The signature date returned by the API
             - expiresAt: The expiration time returned by the API
     */
-    public func createToken(accessToken: String, refreshToken: String, ikm: String, signature: String, expiresAt: Double) -> Token {
+    static public func createToken(accessToken: String, refreshToken: String, ikm: String, signature: String, expiresAt: Double) -> Token {
         return Token(accessToken: accessToken, refreshToken: refreshToken, ikm: ikm, signature: signature, expiresAt: expiresAt)
+    }
+
+    /**
+        Creates a new session
+        - paramters:
+            - key: The public key provided by the server OTK endpoint
+        
+        Returns: Session object
+    */
+    static public func createSession(key: String) -> Session {
+        return Session(serverKey: key)
+    }
+
+    /**
+        Creates a new encrypted response object to hold the encrypted response for parsing
+        - parameters:
+            - publicKey: The base64 public key string returned from the server
+            - nonce: The base64 encoded nonce string returned from the server
+            - response: The base64 encoded raw response returned from the server
+            - signature: The base64 signature header returned by the server to verify the authenticity of the response
+            - signaturePublicKey: The base64 encoded signature public key header returned by the server
+
+        Returns: EncryptedResponse object used to represent the response
+    */
+    static public func createEncryptedResponse(publicKey: String, nonce: String, response: String, signature: String? = nil, signaturePublicKey: String? = nil) -> EncryptedResponse {
+        return EncryptedResponse(publicKey: publicKey, nonce: nonce, response: response, signature: signature, signaturePublicKey: signaturePublicKey)
     }
 }
