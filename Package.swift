@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "libhkdfauth",
     products: [
-        .library(name: "libhkdfauth", targets: ["libhkdfauth"])
+        .library(name: "KDFAuth", targets: ["KDFAuth"])
     ],
     dependencies: [
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMinor(from: "0.9.0")),
@@ -15,14 +15,13 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "libhkdfauth",
-            dependencies: ["Sodium", "Alamofire", "CryptoSwift"],
-            path: "libhkdfauth"
+            name: "KDFAuth",
+            dependencies: ["Sodium", "CryptoSwift"],
+            path: "KDFAuth"
         ),
         .testTarget(
-            name: "libhkdfauthTest",
-            dependencies: ["libhkdfauth"],
-            path: "Test"
+            name: "KDFAuthTest",
+            dependencies: ["KDFAuth", "Alamofire"]
         )
     ]
 )

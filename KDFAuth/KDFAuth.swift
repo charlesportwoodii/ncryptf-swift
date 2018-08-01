@@ -1,11 +1,11 @@
 import Foundation
 import Sodium
 
-public struct libhkdfauth {
+public struct KDFAuth {
     
 }
 
-extension libhkdfauth {
+extension KDFAuth {
 
     /**
         Returns an authorization object
@@ -23,6 +23,7 @@ extension libhkdfauth {
     }
 
     /**
+        Returns a new token object to store credentials provided by the API
         - parameters:
             - accessToken: The Access Token returned by the API
             - refreshToken: The Refresh Token returned by the API
