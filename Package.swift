@@ -4,14 +4,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "libhkdfauth",
+    name: "KDFAuth",
     products: [
         .library(name: "KDFAuth", targets: ["KDFAuth"])
     ],
     dependencies: [
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMinor(from: "0.9.0")),
         .package(url: "https://github.com/jedisct1/swift-sodium.git", .branch("master")),
-        .package(url: "https://github.com/Alamofire/Alamofire.git", from: "4.0.0"),
+//        .package(url: "https://github.com/Alamofire/Alamofire.git", from: "4.0.0"),
     ],
     targets: [
         .target(
@@ -21,7 +21,7 @@ let package = Package(
         ),
         .testTarget(
             name: "KDFAuthTest",
-            dependencies: ["KDFAuth", "Alamofire"]
+            dependencies: ["KDFAuth" /*, "Alamofire" */]
         )
     ]
 )
