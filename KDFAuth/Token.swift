@@ -20,11 +20,11 @@ extension Token {
             - signature: The signature date returned by the API
             - expiresAt: The expiration time returned by the API
     */
-    public init (accessToken: String, refreshToken: String, ikm: String, signature: String, expiresAt: Double) {
+    public init (accessToken: String, refreshToken: String, ikm: Data, signature: Data, expiresAt: Double) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
-        self.ikm = sodium.utils.base642bin(ikm)!
-        self.signature = sodium.utils.base642bin(signature)!
+        self.ikm = sodium.utils.base642bin(String(data: ikm, encoding: .utf8)!)!
+        self.signature = sodium.utils.base642bin(String(data: signature, encoding: .utf8)!)!
         self.expiresAt = expiresAt
     }
 

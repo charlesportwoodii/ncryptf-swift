@@ -18,9 +18,9 @@ extension Session {
         case encryptionFailed
     }
 
-    public init (serverKey: String) {
+    public init (serverKey: Data) {
         myKey = sodium.box.keyPair()!
-        self.serverKey = sodium.utils.base642bin(serverKey)!
+        self.serverKey = sodium.utils.base642bin(String(data: serverKey, encoding: .utf8)!)!
     }
 
     /**
@@ -30,15 +30,6 @@ extension Session {
     */
     internal mutating func setServerKey(serverKey: Bytes) {
         self.serverKey = serverKey
-    }
-    
-    /**
-        Sets the server key when it changes
-        - parameters:
-            severKey: The string interpretation of the server key
-    */
-    internal mutating func setServerKey(serverKey: String) {
-        self.serverKey = sodium.utils.base642bin(serverKey)!
     }
 
     /**

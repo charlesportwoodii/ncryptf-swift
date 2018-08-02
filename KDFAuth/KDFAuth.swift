@@ -18,7 +18,13 @@ extension KDFAuth {
         - Returns: Authorization
     */
     static public func getAuthorizationData(method: String, uri: String, tokens: Token, date: Date, payload: Data) throws -> Authorization {
-        return try Authorization(method: method, uri: uri, tokens: tokens, date: date, payload: payload)
+        return try Authorization(
+            method: method,
+            uri: uri,
+            tokens: tokens,
+            date: date,
+            payload: payload
+        )
     }
 
     /**
@@ -30,8 +36,14 @@ extension KDFAuth {
             - signature: The signature date returned by the API
             - expiresAt: The expiration time returned by the API
     */
-    static public func createToken(accessToken: String, refreshToken: String, ikm: String, signature: String, expiresAt: Double) -> Token {
-        return Token(accessToken: accessToken, refreshToken: refreshToken, ikm: ikm, signature: signature, expiresAt: expiresAt)
+    static public func createToken(accessToken: String, refreshToken: String, ikm: Data, signature: Data, expiresAt: Double) -> Token {
+        return Token(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            ikm: ikm,
+            signature: signature,
+            expiresAt: expiresAt
+        )
     }
 
     /**
@@ -41,7 +53,7 @@ extension KDFAuth {
         
         Returns: Session object
     */
-    static public func createSession(key: String) -> Session {
+    static public func createSession(key: Data) -> Session {
         return Session(serverKey: key)
     }
 
@@ -57,7 +69,14 @@ extension KDFAuth {
 
         Returns: EncryptedResponse object used to represent the response
     */
-    static public func createEncryptedResponse(publicKey: String, nonce: String, hash: String, response: String, signature: String? = nil, signaturePublicKey: String? = nil) -> EncryptedResponse {
-        return EncryptedResponse(publicKey: publicKey, nonce: nonce, hash: hash, response: response, signature: signature, signaturePublicKey: signaturePublicKey)
+    static public func createEncryptedResponse(publicKey: Data, nonce: Data, hash: String, response: Data, signature: Data? = nil, signaturePublicKey: Data? = nil) -> EncryptedResponse {
+        return EncryptedResponse(
+            publicKey: publicKey,
+            nonce: nonce,
+            hash: hash,
+            response: response,
+            signature: signature,
+            signaturePublicKey: signaturePublicKey
+        )
     }
 }

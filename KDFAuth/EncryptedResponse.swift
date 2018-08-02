@@ -24,15 +24,15 @@ extension EncryptedResponse {
             - signature: The base64 signature header returned by the server to verify the authenticity of the response
             - signaturePublicKey: The base64 encoded signature public key header returned by the server
     */
-    public init(publicKey: String, nonce: String, hash: String, response: String, signature: String? = nil, signaturePublicKey: String? = nil) {
-        self.response = sodium.utils.base642bin(response)!
-        self.nonce = sodium.utils.base642bin(nonce)!
-        self.publicKey = sodium.utils.base642bin(publicKey)!
+    public init(publicKey: Data, nonce: Data, hash: String, response: Data, signature: Data? = nil, signaturePublicKey: Data? = nil) {
+        self.response = sodium.utils.base642bin(String(data: response, encoding: .utf8)!)!
+        self.nonce = sodium.utils.base642bin(String(data: nonce, encoding: .utf8)!)!
+        self.publicKey = sodium.utils.base642bin(String(data: publicKey, encoding: .utf8)!)!
         self.hash = hash
 
         if signature != nil && signaturePublicKey != nil {
-            self.signature = sodium.utils.base642bin(signature!)!
-            self.signaturePublicKey = sodium.utils.base642bin(signaturePublicKey!)!
+            self.signature = sodium.utils.base642bin(String(data: signature!, encoding: .utf8)!)!
+            self.signaturePublicKey = sodium.utils.base642bin(String(data: signaturePublicKey!, encoding: .utf8)!)!
         }
     }
 }
