@@ -23,8 +23,8 @@ extension Token {
     public init (accessToken: String, refreshToken: String, ikm: Data, signature: Data, expiresAt: Double) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
-        self.ikm = sodium.utils.base642bin(String(data: ikm, encoding: .utf8)!)!
-        self.signature = sodium.utils.base642bin(String(data: signature, encoding: .utf8)!)!
+	self.ikm = [UInt8](ikm)
+	self.signature = [UInt8](signature)
         self.expiresAt = expiresAt
     }
 
