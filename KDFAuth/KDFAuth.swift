@@ -5,7 +5,7 @@ public struct KDFAuth {
 }
 
 extension KDFAuth {
-
+    
     /**
         Returns an authorization object
         - parameters:
