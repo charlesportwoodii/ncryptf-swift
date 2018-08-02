@@ -23,8 +23,8 @@ extension Token {
     public init (accessToken: String, refreshToken: String, ikm: Data, signature: Data, expiresAt: Double) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
-	self.ikm = [UInt8](ikm)
-	self.signature = [UInt8](signature)
+        self.ikm = [UInt8](ikm)
+        self.signature = [UInt8](signature)
         self.expiresAt = expiresAt
     }
 

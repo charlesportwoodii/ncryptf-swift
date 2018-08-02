@@ -20,7 +20,7 @@ extension Session {
 
     public init (serverKey: Data) {
         myKey = sodium.box.keyPair()!
-        self.serverKey = sodium.utils.base642bin(String(data: serverKey, encoding: .utf8)!)!
+        self.serverKey = [UInt8](serverKey)
     }
 
     /**

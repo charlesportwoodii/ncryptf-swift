@@ -25,14 +25,14 @@ extension EncryptedResponse {
             - signaturePublicKey: The base64 encoded signature public key header returned by the server
     */
     public init(publicKey: Data, nonce: Data, hash: String, response: Data, signature: Data? = nil, signaturePublicKey: Data? = nil) {
-        self.response = sodium.utils.base642bin(String(data: response, encoding: .utf8)!)!
-        self.nonce = sodium.utils.base642bin(String(data: nonce, encoding: .utf8)!)!
-        self.publicKey = sodium.utils.base642bin(String(data: publicKey, encoding: .utf8)!)!
+        self.response = [UInt8](response)
+        self.nonce = [UInt8](nonce)
+        self.publicKey = [UInt8](publicKey)
         self.hash = hash
 
         if signature != nil && signaturePublicKey != nil {
-            self.signature = sodium.utils.base642bin(String(data: signature!, encoding: .utf8)!)!
-            self.signaturePublicKey = sodium.utils.base642bin(String(data: signaturePublicKey!, encoding: .utf8)!)!
+            self.signature = [UInt8](signature!)
+            self.signaturePublicKey = [UInt8](signaturePublicKey!)
         }
     }
 }
