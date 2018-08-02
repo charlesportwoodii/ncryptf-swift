@@ -95,7 +95,7 @@ extension Authorization {
         let hmac = self.getEncodedHMAC()!
 
         if version == 2 {
-            let auth = "{ \"access_token\": \"\(token.accessToken)\", \"hmac\": \"\(hmac)\", \"salt\": \"\(salt)\" }".utf8
+            let auth = "{ \"access_token\": \"\(token.accessToken)\", \"hmac\": \"\(hmac)\", \"salt\": \"\(salt)\", \"v\": 2, \"date\": \(self.getDateString()) }".utf8
             return "HMAC \(sodium.utils.bin2base64([UInt8](auth)))"
         }
 
