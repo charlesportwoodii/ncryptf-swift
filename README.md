@@ -10,10 +10,6 @@ At a high level, an HMAC signature is created based upon the raw request body, t
 
 The library itself is made available by importing the following struct:
 
-```swift
-import KDFAuth
-```
-
 Supporting API's will return the following payload containing at minimum the following information.
 
 ```json
@@ -95,7 +91,7 @@ let encryptedBody = session.encryptRequest(rawRequest)
 Encrypted responses can be decrypted as follows:
 
 ```swift
-let response = "b64....."
+let response = Data(base64Encoded: "b64response...=")!
 
 // Signature checking is optional, but is recommended to verify the authenticity of the response
 let encryptedResponse = KDFAuth.createEncryptedResponse(publicKeyHeader, nonce, hashIdHeader, response, signatureHeader, signaturePublicKeyHeader)
