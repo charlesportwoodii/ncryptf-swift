@@ -14,16 +14,18 @@ extension KDFAuth {
             - tokens: The Token object containing the Initial Key Material, access and refresh tokens, and encryption strings
             - date: The current date. This should have an offset if the local time differs from the server time
             - payload: Raw payload data
+            - verison: The authorization version to generate
         - Throws: Key derivation error if the HMAC or HKDF cannot be calculated
         - Returns: Authorization
     */
-    static public func getAuthorizationData(method: String, uri: String, tokens: Token, date: Date, payload: Data) throws -> Authorization {
+    static public func getAuthorizationData(method: String, uri: String, tokens: Token, date: Date, payload: Data, version: Int? = 2) throws -> Authorization {
         return try Authorization(
             method: method,
             uri: uri,
             tokens: tokens,
             date: date,
-            payload: payload
+            payload: payload,
+            version: version
         )
     }
 

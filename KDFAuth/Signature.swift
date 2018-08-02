@@ -19,18 +19,23 @@ extension Signature {
             - data: The encoded data
         Returns: The signature string
     */
-    public func derive(method: String, uri: String, salt: Bytes, date: Date, payload: Data) -> String {
+    public func derive(method: String, uri: String, salt: Bytes, date: Date, payload: Data, version: Int? = 2) -> String {
         
-        let sha256 = String(data: payload, encoding: .utf8)?
-            .replacingOccurrences(of: "\\/", with: "/")
-            .data(using: .utf8)?
-            .sha256()
-            .toHexString()
+        let hash: String?
+        if version == 2 {
+            hash = sodium.utils.bin2base64(sodium.genericHash.hash(message: payload.bytes, key: salt)!)
+        } else {
+            hash = String(data: payload, encoding: .utf8)?
+                .replacingOccurrences(of: "\\/", with: "/")
+                .data(using: .utf8)?
+                .sha256()
+                .toHexString()
+        }
             
         let b64Salt = sodium.utils.bin2base64(salt)!
         let dateString = DateFormatter.rfc1123.string(from: date)
 
-        return "\(sha256)\n\(method)+\(uri)\n\(dateString)\n\(b64Salt)"
+        return "\(hash)\n\(method)+\(uri)\n\(dateString)\n\(b64Salt)"
     }
 
     /**
