@@ -1,8 +1,9 @@
 # ncryptf Swift
 
-<p style="text-align: center;">
-    <img src="https://github.com/charlesportwoodii/ncryptf-swift/blob/master/logo.png?raw=true" alt="drawing" width="400px"/>
-</p>
+<center>
+    <img src="https://github.com/charlesportwoodii/ncryptf-swift/blob/master/logo.png?raw=true" alt="ncryptf logo" width="400px"/>
+</center>
+
 A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
 
 ## HMAC+HKDF Authentication
