@@ -92,12 +92,14 @@ let encryptedBody = session.encryptRequest(rawRequest)
 Encrypted responses can be decrypted as follows:
 
 ```swift
+// Create a data object from the raw base64 response
 let response = Data(base64Encoded: "b64response...=")!
 
 // Signature checking is optional, but is recommended to verify the authenticity of the response
 let encryptedResponse = KDFAuth.createEncryptedResponse(publicKeyHeader, nonce, hashIdHeader, response, signatureHeader, signaturePublicKeyHeader)
 
+// The decrypted response
 let decryptedResponse = try session.decryptResponse(encryptedResponse)
 ```
 
-The decrypted response will be returned as a `String`, and can be manipulated back to whatever format you prefer.
+The decrypted response will be returned as a `Data?`, and can be manipulated back to whatever format you prefer.
