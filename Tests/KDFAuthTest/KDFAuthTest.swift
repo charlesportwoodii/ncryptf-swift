@@ -39,5 +39,4 @@ class KDFAuthTest: XCTestCase {
     func testTokenIsNotExpired() {
         XCTAssertEqual(token.isExpired(), false)
     }
-
 }
