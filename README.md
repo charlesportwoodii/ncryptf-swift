@@ -1,7 +1,7 @@
 # ncryptf Swift
 
 <p style="text-align: center;">
-![](ncryptf.png)
+    <img src="https://github.com/charlesportwoodii/ncryptf-swift/logo.png?raw=true" alt="drawing" width="400px"/>
 </p>
 A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
 
