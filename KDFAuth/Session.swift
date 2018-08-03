@@ -60,7 +60,7 @@ extension Session {
         Throws: EncryptionError.encryptionFailed
         Returns: Base64 encoded payload
     */
-    public func encryptRequest(payload: Data) throws -> String {
+    public func encryptRequest(payload: Data) throws -> Data? {
         let nonce = sodium.box.nonce()
         let message = payload.bytes
 
@@ -73,7 +73,7 @@ extension Session {
             throw EncryptionError.encryptionFailed
         }
 
-        return sodium.utils.bin2base64(encrypted)!
+        return sodium.utils.bin2base64(encrypted)?.data(using: .utf8)
     }
 
     /**
@@ -83,7 +83,7 @@ extension Session {
         Throws: SignatureVerificationError.invalidSignature
         Returns: Decrypted response as a string. Data can be transformed from a string to an appropriate format
     */
-    public mutating func decryptResponse(response: EncryptedResponse) throws -> String? {
+    public mutating func decryptResponse(response: EncryptedResponse) throws -> Data? {
         self.setServerKey(serverKey: response.publicKey)
 
         guard let decryptedResponse = sodium.box.open(
@@ -95,7 +95,7 @@ extension Session {
             throw EncryptionError.decryptionFailed
         }
 
-        let rawResponse = String(bytes: decryptedResponse, encoding: String.Encoding.utf8)
+        let rawResponse = Data(bytes: decryptedResponse)
 
         // If the signature and signature public key was provided
         // we should verify it before sending the response

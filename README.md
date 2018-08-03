@@ -27,7 +27,7 @@ After extracting the elements, we can create signed request by doing the followi
 
 ```swift
 let token = try KDFAuth.createToken(accessToken, refreshToken, ikm, signing, expiresAt)
-let authentication = KDFAuth.getAuthorizationData(httpMethod, uri, token, date, requestBody)
+let authentication = try KDFAuth.getAuthorizationData(httpMethod, uri, token, date, requestBody)
 ```
 
 A trivial full example is shown as follows:
@@ -39,6 +39,14 @@ let authentication = KDFAuth.getAuthorizationData("GET", "/api/v1/user/index", t
 
 > Note that the `date` parameter should be pre-offset when calling `getAuthorizationData` to prevent time skewing.
 
+### Version 2 HMAC Header
+
+The Version 2 HMAC header, for API's that support it can be retrieved by calling:
+
+```swift
+let header = "HMAC " + authorization.getV2Header(token)
+```
+
 ### Version 1 HMAC Header
 
 For API's using version 1 of the HMAC header, your header would be constructed as follows:
@@ -49,17 +57,9 @@ let header = "HMAC " + token.accessToken + "," + authroization.getEncodedHMAC() 
 
 This string can be used in the `Authorization` Header
 
-### Version 2 HMAC Header
+#### Date Header
 
-The Version 2 HMAC header, for API's that support it can be retrieved by calling:
-
-```swift
-let header = "HMAC " + authorization.getV2Header(token)
-```
-
-### Date Header
-
-The `X-Date` header can be retrieved by calling `authorization.getDateString()`
+The Version 1 HMAC header requires an additional `X-Date` header. The `X-Date` header can be retrieved by calling `authorization.getDateString()`
 
 ## Encrypted Requests & Responses
 
@@ -79,12 +79,13 @@ The primary reason you may want to establish an encrypted session with the API i
 Payloads can be encrypted as follows:
 
 ```swift
+let key = Data(base64Encoded:"server_key")!,
 let session = KDFAuth.createSession(key)
 let request: Data? = "{ \"foo\": \"bar\" }".data(using: .utf8)
 let encryptedBody = session.encryptRequest(rawRequest)
 ```
 
-> Note that you need to have a pre-bootstrapped security key to encrypt data. Typically this is returned by `/api/v1/server/otk`
+> Note that you need to have a pre-bootstrapped security key to encrypt data. For the v1 API, this is typically this is returned by `/api/v1/server/otk`
 
 ### Decrypting Responses
 
