@@ -1,10 +1,10 @@
 import Foundation
 import Sodium
 
-public struct KDFAuth {
+public struct ncryptf {
 }
 
-extension KDFAuth {
+extension ncryptf {
     
     /**
         Returns an authorization object

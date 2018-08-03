@@ -1,6 +1,9 @@
-# HMAC+HKDF Authentication Library
+# ncryptf Swift
 
-A library to facility HMAC+HKDF style authentication.
+<p style="text-align: center;">
+![](ncryptf.png)
+</p>
+A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
 
 ## HMAC+HKDF Authentication
 
@@ -26,15 +29,15 @@ Supporting API's will return the following payload containing at minimum the fol
 After extracting the elements, we can create signed request by doing the following:
 
 ```swift
-let token = try KDFAuth.createToken(accessToken, refreshToken, ikm, signing, expiresAt)
-let authentication = try KDFAuth.getAuthorizationData(httpMethod, uri, token, date, requestBody)
+let token = try ncryptf.createToken(accessToken, refreshToken, ikm, signing, expiresAt)
+let authentication = try ncryptf.getAuthorizationData(httpMethod, uri, token, date, requestBody)
 ```
 
 A trivial full example is shown as follows:
 
 ```swift
 let request: Data? = "{ \"foo\": \"bar\" }".data(using: .utf8)
-let authentication = KDFAuth.getAuthorizationData("GET", "/api/v1/user/index", token, Date(), request)
+let authentication = ncryptf.getAuthorizationData("GET", "/api/v1/user/index", token, Date(), request)
 ```
 
 > Note that the `date` parameter should be pre-offset when calling `getAuthorizationData` to prevent time skewing.
@@ -80,7 +83,7 @@ Payloads can be encrypted as follows:
 
 ```swift
 let key = Data(base64Encoded:"server_key")!,
-let session = KDFAuth.createSession(key)
+let session = ncryptf.createSession(key)
 let request: Data? = "{ \"foo\": \"bar\" }".data(using: .utf8)
 let encryptedBody = session.encryptRequest(rawRequest)
 ```
@@ -96,7 +99,7 @@ Encrypted responses can be decrypted as follows:
 let response = Data(base64Encoded: "b64response...=")!
 
 // Signature checking is optional, but is recommended to verify the authenticity of the response
-let encryptedResponse = KDFAuth.createEncryptedResponse(publicKeyHeader, nonce, hashIdHeader, response, signatureHeader, signaturePublicKeyHeader)
+let encryptedResponse = ncryptf.createEncryptedResponse(publicKeyHeader, nonce, hashIdHeader, response, signatureHeader, signaturePublicKeyHeader)
 
 // The decrypted response
 let decryptedResponse = try session.decryptResponse(encryptedResponse)

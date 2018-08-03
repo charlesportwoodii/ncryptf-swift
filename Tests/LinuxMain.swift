@@ -1,6 +1,6 @@
 import XCTest
-@testable import KDFAuthTest
+@testable import ncryptfTest
 
 XCTMain([
-    testCase(KDFAuthTest.allTests)
+    testCase(ncryptfTest.allTests)
 ])

@@ -35,7 +35,7 @@ extension Signature {
         let b64Salt = sodium.utils.bin2base64(salt)!
         let dateString = DateFormatter.rfc1123.string(from: date)
 
-        return "\(hash)\n\(method)+\(uri)\n\(dateString)\n\(b64Salt)"
+        return "\(String(describing: hash))\n\(method)+\(uri)\n\(dateString)\n\(b64Salt)"
     }
 
     /**

@@ -4,24 +4,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "KDFAuth",
+    name: "ncryptf-swift",
     products: [
-        .library(name: "KDFAuth", targets: ["KDFAuth"])
+        .library(name: "ncryptf", targets: ["ncryptf"])
     ],
     dependencies: [
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMinor(from: "0.9.0")),
-        .package(url: "https://github.com/jedisct1/swift-sodium.git", .branch("master")),
-//        .package(url: "https://github.com/Alamofire/Alamofire.git", from: "4.0.0"),
+        .package(url: "https://github.com/jedisct1/swift-sodium.git", .branch("master"))
     ],
     targets: [
         .target(
-            name: "KDFAuth",
+            name: "ncryptf",
             dependencies: ["Sodium", "CryptoSwift"],
-            path: "KDFAuth"
+            path: "ncryptf"
         ),
         .testTarget(
-            name: "KDFAuthTest",
-            dependencies: ["KDFAuth" /*, "Alamofire" */]
+            name: "ncryptfTest",
+            dependencies: ["ncryptf"]
         )
     ]
 )

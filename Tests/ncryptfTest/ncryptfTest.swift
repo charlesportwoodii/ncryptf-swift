@@ -17,10 +17,11 @@ extension Data {
 class KDFAuthTest: XCTestCase {
 
     static let allTests = [
-        ("testTokenIsNotExpired", testTokenIsNotExpired)
+        ("testTokenIsNotExpired", testTokenIsNotExpired),
+        ("testTokenIkmIs32Bytes", testTokenIkmIs32Bytes)
     ]
 
-    let token = KDFAuth.createToken(
+    let token = ncryptf.createToken(
         accessToken: "x2gMeJ5Np0CcKpZav+i9iiXeQBtaYMQ/yeEtcOgY3J",
         refreshToken: "LRSEe5zHb1aq20Hr9te2sQF8sLReSkO8bS1eD/9LDM8",
         ikm: Data(base64Encoded:"f2mTaH9vkZZQyF7SxVeXDlOSDbVwjUzhdXv2T/YYO8k=")!,
@@ -38,5 +39,9 @@ class KDFAuthTest: XCTestCase {
 
     func testTokenIsNotExpired() {
         XCTAssertEqual(token.isExpired(), false)
+    }
+
+    func testTokenIkmIs32Bytes() {
+        XCTAssertEqual(token.ikm.count, 32)
     }
 }
