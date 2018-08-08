@@ -6,6 +6,49 @@
 
 A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
 
+## Installing
+
+This library can be installed via Swift Package Manager by adding the following dependency
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/charlesportwoodii/ncryptf-swift.git", .branch("master"))
+],
+```
+
+## Testing
+
+### MacOS
+
+MacOS tests run via the swift test command
+```
+swift test
+```
+
+### Linux
+
+Linux tests can be run either locally, or through the provided docker container
+
+#### Local Testing
+```
+apt install libsodium-dev
+swift test
+```
+
+#### Docker Testing
+
+If you're working on a platform that doesn't support swift or XCTestCase, you run the test suite through Docker
+
+First, build the docker image
+```
+docker build --tag ncryptf --compress --squash .
+```
+
+Then the tests can be run as follows:
+```
+docker run -it -v${PWD-.}:/package ncryptf swift test
+```
+
 ## HMAC+HKDF Authentication
 
 HMAC+HKDF Authentication is an Authentication method that allows ensures the request is not tampered with in transit. This provides resiliance not only against network layer manipulation, but also man-in-the-middle attacks.
@@ -22,7 +65,6 @@ Supporting API's will return the following payload containing at minimum the fol
     "refresh_token": "MA2JX5FXWS57DHW4OIHHQDCJVGS3ZKKFCL7XM4GNOB567I6ER4LQ",
     "ikm": "bDEyECRvKKE8w81fX4hz/52cvHsFPMGeJ+a9fGaVvWM=",
     "signing": "ecYXfAwNVoS9ePn4xWhiJOdXQzr6LpJIeIn4AVju/Ug=",
-    "hash": "822d1a496b11ce6639fec7a2993ba5c02153150e45e5cec5132f3f16bfe95149",
     "expires_at": 1472678411
 }
 ```
