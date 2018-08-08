@@ -1,6 +1,5 @@
-import XCTest
-import ncryptf
 import Foundation
+import Sodium
 
 extension String {
     func toData() -> Data? {
@@ -14,6 +13,10 @@ extension Data {
     }
 }
 
-class ncryptfTest: XCTestCase {
-
+public struct sig {
+    public let httpMethod: String
+    public let uri: String
+    public let salt: Bytes
+    public let date: Date
+    public let payload: Data
 }
