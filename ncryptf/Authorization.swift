@@ -3,12 +3,17 @@ import Sodium
 import CryptoSwift
 
 public struct Authorization {
-    private var hmac: Bytes?
+    private var token: Token
     private var salt: Bytes
     private var date: Date
     private var signature: String
+    private var hmac: Bytes?
+    private var version: Int? = 2
 
     private let sodium = Sodium()
+
+    public let AUTH_INFO = "HMAC|AuthenticationKey"
+    public let VARIANT = HMAC.Variant.sha256
 }
 
 extension Authorization {
@@ -19,35 +24,41 @@ extension Authorization {
     /**
         Returns an authorization object
         - parameters:
-            - method: The HTTP method
+            - httpMethod: The HTTP method
             - uri: The URI
-            - tokens: The Token object containing the Initial Key Material, access and refresh tokens, and encryption strings
+            - token: The Token object containing the Initial Key Material, access and refresh tokens, and encryption strings
             - date: The current date. This should have an offset if the local time differs from the server time
             - payload: Raw payload data
             - version: The HMAC version to generate
         Throws: Key derivation error if the HMAC or HKDF cannot be calculated
     */
-    public init(method: String, uri: String, tokens: Token, date: Date, payload: Data, version: Int? = 2) throws {
+    public init(httpMethod: String, uri: String, token: Token, date: Date, payload: Data, version: Int? = 2, salt: Bytes? = nil) throws {
+        let method = httpMethod.uppercased()
+        if (salt == nil) {
+            self.salt = sodium.randomBytes.buf(length: Int(32))!
+        } else {
+            self.salt = salt!
+        }
         self.date = date
-        let sig = Signature()
+        self.version = version
+        self.token = token
 
-        salt = sig.generateSalt()
-
-        signature = sig.derive(
-            method: method,
+        signature = Signature().derive(
+            httpMethod: method,
             uri: uri,
-            salt: salt,
-            date: date,
+            salt: self.salt,
+            date: self.date,
             payload: payload,
             version: version
         )
 
         do {
-            let info: [UInt8] = Array("HMAC|AuthenticationKey".utf8)
-            let kdf = try HKDF(password: tokens.ikm, salt: salt, info: info, variant: HMAC.Variant.sha256)
+            let info: [UInt8] = Array(AUTH_INFO.utf8)
+            let hkdf = try HKDF(password: token.ikm, salt: salt, info: info, variant: VARIANT)
                 .calculate()
+
             let signatureBytes: [UInt8] = Array(signature.utf8)
-            hmac = try HMAC(key: kdf, variant: HMAC.Variant.sha256)
+            self.hmac = try HMAC(key: hkdf.toHexString(), variant: VARIANT)
                 .authenticate(signatureBytes)
         } catch {
             throw Error.derivationError
@@ -55,24 +66,38 @@ extension Authorization {
     }
 
     /**
-        Returns: signature string
+        Returns: date
+    */
+    public func getDate() -> Date {
+        return date
+    }
+
+    /**
+        Returns: Formatted date string
     */
     public func getDateString() -> String? {
         return DateFormatter.rfc1123.string(from: date)
     }
     
     /**
+        Returns: 32 byte HMAC byte array
+    */
+    public func getHMAC() -> Bytes? {
+        return hmac
+    }
+
+    /**
         Returns: Base64 encoded HMAC
     */
     public func getEncodedHMAC() -> String? {
-        return sodium.utils.bin2base64(hmac!)
+        return Data(bytes: hmac!, count: hmac!.count).base64EncodedString()
     }
 
     /**
         Returns: Base64 encoded salt
     */
     public func getEncodedSalt() -> String? {
-        return sodium.utils.bin2base64(salt)
+        return Data(bytes: salt, count: salt.count).base64EncodedString()
     }
 
     /**
@@ -83,20 +108,21 @@ extension Authorization {
     }
 
     /**
-        Returns the header string for the Authorization header
-        - parameters:
-            - token: The token containing the headers
-            - verison: The version of the HMAC header to generate
-        Returns: V2 header string
+        Returns: The header authorization string
     */
-    public func getHeaderString(token: Token, version: Int? = 2) -> String? {
+    public func getHeader() -> String? {
 
         let salt = self.getEncodedSalt()!
         let hmac = self.getEncodedHMAC()!
 
-        if version == 2 {
-            let auth = "{ \"access_token\": \"\(token.accessToken)\", \"hmac\": \"\(hmac)\", \"salt\": \"\(salt)\", \"v\": 2, \"date\": \"\(String(describing: self.getDateString()))\" }".utf8
-            return "HMAC \(String(describing: sodium.utils.bin2base64([UInt8](auth))))"
+        if self.version == 2 {
+            let auth = "{\"access_token\":\"\(token.accessToken)\",\"date\":\"\(String(describing: self.getDateString()!))\",\"hmac\":\"\(hmac)\",\"salt\":\"\(salt)\",\"v\":2}"
+                .replacingOccurrences(of: "/", with: "\\/")
+                .data(using: .utf8, allowLossyConversion: false)!
+
+            // sodium.utils.bin2base64() returns a malformed string
+            let encodedAuth = Data(bytes: auth.bytes, count: auth.count).base64EncodedString()
+            return "HMAC \(String(describing: encodedAuth))"
         }
 
         return "HMAC \(token.accessToken),\(hmac),\(salt)"

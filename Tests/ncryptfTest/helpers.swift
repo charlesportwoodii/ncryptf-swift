@@ -5,6 +5,10 @@ extension String {
     func toData() -> Data? {
         return self.data(using: .utf8, allowLossyConversion: false)
     }
+    
+    var lines: [String] {
+        return self.components(separatedBy: "\n")
+    }
 }
 
 extension Data {
@@ -13,10 +17,8 @@ extension Data {
     }
 }
 
-public struct sig {
-    public let httpMethod: String
-    public let uri: String
-    public let salt: Bytes
-    public let date: Date
-    public let payload: Data
+extension Date {
+    func adding(minutes: Int) -> Date {
+        return Calendar.current.date(byAdding: .minute, value: minutes, to: self)!
+    }
 }

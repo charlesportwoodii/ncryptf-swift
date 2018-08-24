@@ -6,6 +6,11 @@
 
 A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
 
+| OS    | Build Status |
+|-------|------|
+| Linux | [![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/linux?style=flat-square)]() |
+| MacOS | [![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/osx?style=flat-square)]() |
+
 ## Installing
 
 This library can be installed via Swift Package Manager by adding the following dependency
@@ -62,7 +67,7 @@ Supporting API's will return the following payload containing at minimum the fol
 ```json
 {
     "access_token": "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA",
-    "refresh_token": "MA2JX5FXWS57DHW4OIHHQDCJVGS3ZKKFCL7XM4GNOB567I6ER4LQ",
+    "refresh_token": "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA",
     "ikm": "bDEyECRvKKE8w81fX4hz/52cvHsFPMGeJ+a9fGaVvWM=",
     "signing": "ecYXfAwNVoS9ePn4xWhiJOdXQzr6LpJIeIn4AVju/Ug=",
     "expires_at": 1472678411
@@ -72,33 +77,76 @@ Supporting API's will return the following payload containing at minimum the fol
 After extracting the elements, we can create signed request by doing the following:
 
 ```swift
-let token = try ncryptf.createToken(accessToken, refreshToken, ikm, signing, expiresAt)
-let authentication = try ncryptf.getAuthorizationData(httpMethod, uri, token, date, requestBody)
+let auth = try? Authorization(
+    httpMethod: httpMethod,
+    uri: uri,
+    token: token,
+    date: Date(),
+    payload: payload
+)
+
+if auth = auth {
+    let header = auth.getHeader()!
+}
 ```
 
 A trivial full example is shown as follows:
 
 ```swift
-let request: Data? = "{ \"foo\": \"bar\" }".data(using: .utf8)
-let authentication = ncryptf.getAuthorizationData("GET", "/api/v1/user/index", token, Date(), request)
+let token = Token(
+    accessToken: "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA",
+    refreshToken: "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA",
+    ikm: Data(base64Encoded: "bDEyECRvKKE8w81fX4hz/52cvHsFPMGeJ+a9fGaVvWM=")!,
+    signature: Data(base64Encoded: "ecYXfAwNVoS9ePn4xWhiJOdXQzr6LpJIeIn4AVju/Ug=")!,
+    expiresAt: Date(timeIntervalSinceReferenceDate: 1472678411)
+)
+
+let date = Date()
+
+let auth = try? Authorization(
+    httpMethod: "POST",
+    uri: "/api/v1/test",
+    token: token,
+    date: date,
+    payload: "{\"foo\":\"bar\"}".data(using: .utf8, allowLossyConversion: false)
+)
+
+if auth = auth {
+    let header = auth.getHeader()!
+}
 ```
 
-> Note that the `date` parameter should be pre-offset when calling `getAuthorizationData` to prevent time skewing.
+> Note that the `date` property should be pore-offset when calling `Authorization` to prevent time skewing.
+
+The `payload` parameter in `Authorization:init` should be a JSON serializable string.
 
 ### Version 2 HMAC Header
 
 The Version 2 HMAC header, for API's that support it can be retrieved by calling:
 
 ```swift
-let header = "HMAC " + authorization.getV2Header(token)
+if auth = auth {
+    let header = auth.getHeader()!
+}
 ```
 
 ### Version 1 HMAC Header
 
-For API's using version 1 of the HMAC header, your header would be constructed as follows:
+For API's using version 1 of the HMAC header, call `Authorization` with the optional `version` parameter set to `1` for the 6th parameter.
 
 ```swift
-let header = "HMAC " + token.accessToken + "," + authroization.getEncodedHMAC() + "," + authorization.getEncodedSalt()
+let auth = try? Authorization(
+    httpMethod: httpMethod,
+    uri: uri,
+    token: token,
+    date: Date(),
+    payload: payload,
+    version: 1
+)
+
+if auth = auth {
+    let header = auth.getHeader()!
+}
 ```
 
 This string can be used in the `Authorization` Header
@@ -109,7 +157,7 @@ The Version 1 HMAC header requires an additional `X-Date` header. The `X-Date` h
 
 ## Encrypted Requests & Responses
 
-This library enables clients coding in Swift 4 to establish and trusted encrypted session on top of a TLS layer, while simultaniously (and independently) providing the ability authenticate and identify a client via HMAC+HKDF style authentication.
+This library enables clients coding in PHP 7.1+ to establish and trusted encrypted session on top of a TLS layer, while simultaniously (and independently) providing the ability authenticate and identify a client via HMAC+HKDF style authentication.
 
 The rationale for this functionality includes but is not limited to:
 
@@ -125,27 +173,14 @@ The primary reason you may want to establish an encrypted session with the API i
 Payloads can be encrypted as follows:
 
 ```swift
-let key = Data(base64Encoded:"server_key")!,
-let session = ncryptf.createSession(key)
-let request: Data? = "{ \"foo\": \"bar\" }".data(using: .utf8)
-let encryptedBody = session.encryptRequest(rawRequest)
 ```
 
-> Note that you need to have a pre-bootstrapped security key to encrypt data. For the v1 API, this is typically this is returned by `/api/v1/server/otk`
+> Note that you need to have a pre-bootstrapped public key to encrypt data. For the v1 API, this is typically this is returned by `/api/v1/server/otk`.
 
 ### Decrypting Responses
 
-Encrypted responses can be decrypted as follows:
+Responses from the server can be decrypted as follows:
 
 ```swift
-// Create a data object from the raw base64 response
-let response = Data(base64Encoded: "b64response...=")!
 
-// Signature checking is optional, but is recommended to verify the authenticity of the response
-let encryptedResponse = ncryptf.createEncryptedResponse(publicKeyHeader, nonce, hashIdHeader, response, signatureHeader, signaturePublicKeyHeader)
-
-// The decrypted response
-let decryptedResponse = try session.decryptResponse(encryptedResponse)
 ```
-
-The decrypted response will be returned as a `Data?`, and can be manipulated back to whatever format you prefer.

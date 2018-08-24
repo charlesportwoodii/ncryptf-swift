@@ -3,7 +3,6 @@ import Sodium
 import CryptoSwift
 
 public struct Signature {
-    public let saltBytes = Int(32)
     private let sodium = Sodium()
 }
 
@@ -12,37 +11,51 @@ extension Signature {
     /**
         Derives a signature for hashing
         - parameters:
-            - method: The HTTP method
+            - httpMethod: The HTTP method
             - uri: The URI of the request
             - bytes: The salt bytes
             - date: The date
             - data: The encoded data
         Returns: The signature string
     */
-    public func derive(method: String, uri: String, salt: Bytes, date: Date, payload: Data, version: Int? = 2) -> String {
+    public func derive(httpMethod: String, uri: String, salt: Bytes, date: Date, payload: Data, version: Int? = 2) -> String {
         
+        let method = httpMethod.uppercased()
+        
+        let hash = getSignatureHash(
+            data: payload,
+            salt: salt,
+            version: version
+        )!
+
+        let time = DateFormatter.rfc1123.string(from: date)
+        // sodium.utils.bin2base64() returns a malformed string
+        let b64Salt = Data(bytes: salt, count: salt.count).base64EncodedString()
+
+        return "\(String(describing: hash))\n\(method)+\(uri)\n\(time)\n\(b64Salt)"
+    }
+
+    /**
+        Generates a signature hash
+        -parameters:
+            - data: The data to hash
+            - salt: 32 byte salt
+            - version: The signature hash version to generate. Defaults to version 2
+    */
+    private func getSignatureHash(data: Data, salt: Bytes, version: Int? = 2) -> String? {
         let hash: String?
         if version == 2 {
-            hash = sodium.utils.bin2base64(sodium.genericHash.hash(message: payload.bytes, key: salt)!)
+            let genericHash = sodium.genericHash.hash(message: data.bytes, key: salt, outputLength: 64)!
+            // sodium.utils.bin2base64() returns a malformed string
+            hash = Data(bytes: genericHash, count: genericHash.count).base64EncodedString()
         } else {
-            hash = String(data: payload, encoding: .utf8)?
+            hash = String(data: data, encoding: .utf8)?
                 .replacingOccurrences(of: "\\/", with: "/")
                 .data(using: .utf8)?
                 .sha256()
                 .toHexString()
         }
-            
-        let b64Salt = sodium.utils.bin2base64(salt)!
-        let dateString = DateFormatter.rfc1123.string(from: date)
 
-        return "\(String(describing: hash))\n\(method)+\(uri)\n\(dateString)\n\(b64Salt)"
-    }
-
-    /**
-        Generates a salt byte array of saltByte's length
-        Returns: Bytes
-    */
-    public func generateSalt() -> Bytes {
-        return sodium.randomBytes.buf(length: saltBytes)!
+        return hash
     }
 }
