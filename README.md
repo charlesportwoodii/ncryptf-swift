@@ -8,8 +8,8 @@ A library for facilitating hashed based KDF signature authentication, and end-to
 
 | OS    | Build Status |
 |-------|------|
-| Linux | [![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/linux?style=flat-square)]() |
-| MacOS | [![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/osx?style=flat-square)]() |
+| Linux | ![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/linux?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift |
+| MacOS | ![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/osx?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
 
 ## Installing
 
