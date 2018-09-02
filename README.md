@@ -168,11 +168,60 @@ The rationale for this functionality includes but is not limited to:
 
 The primary reason you may want to establish an encrypted session with the API itself is to ensure confidentiality of the IKM to prevent data leakages over untrusted networks to avoid information being exposed in a Cloudflare like incident (or any man-in-the-middle attack). Encrypted sessions enable you to utilize a service like Cloudflare should a memory leak occur again with confidence that the IKM and other secure data would not be exposed.
 
+### Generating Keys
+
+To encrypt, decrypt, sign, and verify messages, you'll need to be able to generate the appropriate keys. Internally, this library uses [libsodium-swift](https://github.com/jedisct1/swift-sodium) to perform all necessary cryptography functions.
+
+#### Encrytion Keys
+
+Encryption uses a sodium crypto box. A keypair can be generated as follows:
+
+```swift
+let keyPairEnc = sodium.box.keyPair()!
+let publicEnc = keyPairEnc.publicKey
+let secretEnc = keyPairEnc.secretKey
+```
+
+#### Signing Keys
+
+Encryption uses a sodium signature. A keypair can be generated as follows:
+
+```swift
+let keyPairSign = sodium.sign.keyPair()!
+let publicSign = keyPairSign.publicKey
+let secretSign = keyPairSign.secretKey
+```
+
 ### Encrypted Request Body
 
 Payloads can be encrypted as follows:
 
 ```swift
+import CryptoSwift // For .bytes alias
+
+    let payload = """
+{
+    "foo": "bar"
+}
+"""
+
+var Request = Request(
+    secretKey: keyPairEnc.secretKey,
+    publicKey: Data(base64Encoded: "").bytes! // This should be the public key provided by the server
+)
+
+let cipher = try? request.encrypt(
+    request: payload.data(using: .utf8, allowLossyConversion: false)!
+)
+
+if let cipher = cipher {
+    // Base64 encode the encrypted data to send to the server
+    let encrypted = Data(bytes: cipher!, count: cipher!.count).base64EncodedString()
+    // Grab the generated nonce
+    let nonce = request.getNonce()
+
+    // Do your HTTP request here
+}
 ```
 
 > Note that you need to have a pre-bootstrapped public key to encrypt data. For the v1 API, this is typically this is returned by `/api/v1/server/otk`.
@@ -182,5 +231,26 @@ Payloads can be encrypted as follows:
 Responses from the server can be decrypted as follows:
 
 ```swift
+import CryptoSwift // For .bytes alias
+let response = Response(
+    secretKey: keyPairEnc.secretKey,
+    publicKey: Data(base64Encoded: "").bytes! // This should be the public key provided by the server
+)
 
+let decrypted = try? response.decrypt(
+    response: Data(base64Encoded: "")!.bytes, // The raw body provided in the servers http response
+    nonce: nonce // X-Nonce provided by server
+)
+
+if let decrypted = decrypted {
+    // `decrypted` now is a Data object containing the decrypted data. Convert to to a String to print
+    // Or pass to another object to initialize
+
+    // For added integrity, check the detached signature
+    let isSignatureValid = try! response.isSignatureValid(
+        response: decrypted.bytes,
+        signature: Data(base64Encoded: "").bytes! // The X-Signature header provided by the server
+        publicKey: Data(base64Encoded: "").bytes! // The X-Sig-Pub key, or similar provided by the server
+    )
+}
 ```

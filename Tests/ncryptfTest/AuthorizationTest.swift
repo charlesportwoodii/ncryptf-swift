@@ -1,7 +1,6 @@
 import XCTest
 import Foundation
 import CryptoSwift
-import Sodium
 @testable import ncryptf
 
 class AuthorizationTest : XCTestCase {

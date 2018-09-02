@@ -13,12 +13,13 @@ public struct Token {
 extension Token {
 
     /**
-        - parameters:
-            - accessToken: The Access Token returned by the API
-            - refreshToken: The Refresh Token returned by the API
-            - ikm: The Initial Key Material returned by the API
-            - signature: The signature date returned by the API
-            - expiresAt: The expiration time returned by the API
+     Generates a new object to represent a server token set
+     - Parameters:
+        - accessToken: The Access Token returned by the API
+        - refreshToken: The Refresh Token returned by the API
+        - ikm: The Initial Key Material returned by the API
+        - signature: The signature date returned by the API
+        - expiresAt: The expiration time returned by the API
     */
     public init (accessToken: String, refreshToken: String, ikm: Data, signature: Data, expiresAt: Double) {
         self.accessToken = accessToken
@@ -29,8 +30,7 @@ extension Token {
     }
 
     /**
-        Returns true if the current token is expires and requires refreshing
-        - Returns: true or false
+     - Returns: `true` if the current token is expires and requires refreshing
     */
     public func isExpired() -> Bool {
         let now = Date().timeIntervalSince1970;

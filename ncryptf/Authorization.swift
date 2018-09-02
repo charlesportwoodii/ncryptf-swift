@@ -22,15 +22,15 @@ extension Authorization {
     }
 
     /**
-        Returns an authorization object
-        - parameters:
-            - httpMethod: The HTTP method
-            - uri: The URI
-            - token: The Token object containing the Initial Key Material, access and refresh tokens, and encryption strings
-            - date: The current date. This should have an offset if the local time differs from the server time
-            - payload: Raw payload data
-            - version: The HMAC version to generate
-        Throws: Key derivation error if the HMAC or HKDF cannot be calculated
+     Returns an authorization object
+     - Parameters:
+        - httpMethod: The HTTP method
+        - uri: The URI
+        - token: The Token object containing the Initial Key Material, access and refresh tokens, and encryption strings
+        - date: The current date. This should have an offset if the local time differs from the server time
+        - payload: Raw payload data
+        - version: The HMAC version to generate
+     - Throws: Key derivation error if the HMAC or HKDF cannot be calculated
     */
     public init(httpMethod: String, uri: String, token: Token, date: Date, payload: Data, version: Int? = 2, salt: Bytes? = nil) throws {
         let method = httpMethod.uppercased()
@@ -66,49 +66,49 @@ extension Authorization {
     }
 
     /**
-        Returns: date
+     - Returns: Original `Date` object
     */
     public func getDate() -> Date {
         return date
     }
 
     /**
-        Returns: Formatted date string
+     -Returns: Formatted date string
     */
     public func getDateString() -> String? {
         return DateFormatter.rfc1123.string(from: date)
     }
     
     /**
-        Returns: 32 byte HMAC byte array
+     - Returns: 32 byte HMAC byte array
     */
     public func getHMAC() -> Bytes? {
         return hmac
     }
 
     /**
-        Returns: Base64 encoded HMAC
+     - Returns: Base64 encoded HMAC
     */
     public func getEncodedHMAC() -> String? {
         return Data(bytes: hmac!, count: hmac!.count).base64EncodedString()
     }
 
     /**
-        Returns: Base64 encoded salt
+     - Returns: Base64 encoded salt
     */
     public func getEncodedSalt() -> String? {
         return Data(bytes: salt, count: salt.count).base64EncodedString()
     }
 
     /**
-        Returns: Signature string
+     - Returns: The generated signature string
     */
     public func getSignatureString() -> String? {
         return signature
     }
 
     /**
-        Returns: The header authorization string
+     - Returns: The header authorization string
     */
     public func getHeader() -> String? {
 

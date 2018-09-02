@@ -9,14 +9,14 @@ public struct Signature {
 extension Signature {
 
     /**
-        Derives a signature for hashing
-        - parameters:
-            - httpMethod: The HTTP method
-            - uri: The URI of the request
-            - bytes: The salt bytes
-            - date: The date
-            - data: The encoded data
-        Returns: The signature string
+     Derives a signature for hashing
+     - Parameters:
+        - httpMethod: The HTTP method
+        - uri: The URI of the request
+        - bytes: The salt bytes
+        - date: The date
+        - data: The encoded data
+     - Returns: The signature string
     */
     public func derive(httpMethod: String, uri: String, salt: Bytes, date: Date, payload: Data, version: Int? = 2) -> String {
         
@@ -36,11 +36,12 @@ extension Signature {
     }
 
     /**
-        Generates a signature hash
-        -parameters:
-            - data: The data to hash
-            - salt: 32 byte salt
-            - version: The signature hash version to generate. Defaults to version 2
+     Generates a signature hash
+     - Parameters:
+        - data: The data to hash
+        - salt: 32 byte salt
+        - version: The signature hash version to generate. Defaults to version 2
+     - Returns: A string representing the signature hash
     */
     private func getSignatureHash(data: Data, salt: Bytes, version: Int? = 2) -> String? {
         let hash: String?
