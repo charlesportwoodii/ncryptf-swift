@@ -17,7 +17,7 @@ This library can be installed via Swift Package Manager by adding the following 
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/charlesportwoodii/ncryptf-swift.git", .branch("master"))
+    .package(url: "https://github.com/charlesportwoodii/ncryptf-swift.git", , .upToNextMinor(from: "0.1.3")),
 ],
 ```
 
