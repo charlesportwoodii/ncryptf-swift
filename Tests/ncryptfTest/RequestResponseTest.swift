@@ -19,6 +19,9 @@ class RequestResponseTest : XCTestCase {
 
     let nonce = Data(base64Encoded: "bulRnKt/BvwnwiCMBLvdRM5+yNFP38Ut")!.bytes
 
+    let expectedCipher = Data(base64Encoded: "1odrjBif71zRcZidfhEzSb80rXGJGB1J3upTb+TwhpxmFjXOXjwSDw45e7p/+FW4Y0/FDuLjHfGghOG0UC7j4xmX8qIVYUdbKCB/dLn34HQ0D0NIM6N9Qj83bpS5XgK1o+luonc0WxqA3tdXTcgkd2D+cSSSotJ/s+5fqN3w5xsKc7rKb1p3MpvRzyEmdNgJCFOk8EErn0bolz9LKyPEO0A2Mnkzr19bDwsgD1DGEYlo0i9KOw06RpaZRz2J+OJ+EveIlQGDdLT8Gh+nv65TOKJqCswOly0=")!.bytes
+    let expectedSignature = Data(base64Encoded: "dcvJclMxEx7pcW/jeVm0mFHGxVksY6h0/vNkZTfVf+wftofnP+yDFdrNs5TtZ+FQ0KEOm6mm9XUMXavLaU9yDg==")!.bytes
+
     let payload = """
 {
     "foo": "bar",
@@ -59,6 +62,9 @@ class RequestResponseTest : XCTestCase {
             request: payload.toData()!,
             secretKey: signatureKeyPairSecret
         )
+
+        XCTAssertEqual(cipher!, expectedCipher);
+        XCTAssertEqual(signature!, expectedSignature);
 
         let response = Response(
             secretKey: serverKeyPairSecret,
