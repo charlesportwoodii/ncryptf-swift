@@ -1,15 +1,18 @@
 # ncryptf Swift
 
-<center>
-    <img src="https://github.com/charlesportwoodii/ncryptf-swift/blob/master/logo.png?raw=true" alt="ncryptf logo" width="400px"/>
-</center>
-
-A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
+[![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/charlesportwoodii/ncryptf-php/blob/master/LICENSE.md)
 
 | OS    | Build Status |
 |-------|------|
 | Linux | [![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/linux?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
 | MacOS | [![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/osx?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
+
+
+<center>
+    <img src="https://github.com/charlesportwoodii/ncryptf-swift/blob/master/logo.png?raw=true" alt="ncryptf logo" width="400px"/>
+</center>
+
+A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
 
 ## Installing
 
