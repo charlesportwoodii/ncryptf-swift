@@ -4,5 +4,6 @@ import XCTest
 XCTMain([
    testCase(SignatureTest.allTests),
    testCase(AuthorizationTest.allTests),
-   testCase(RequestResponseTest.allTests)
+   testCase(RequestResponseTest.allTests),
+   testCase(UtilsTest.allTests)
 ])

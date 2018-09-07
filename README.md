@@ -177,9 +177,7 @@ To encrypt, decrypt, sign, and verify messages, you'll need to be able to genera
 Encryption uses a sodium crypto box. A keypair can be generated as follows:
 
 ```swift
-let keyPairEnc = sodium.box.keyPair()!
-let publicEnc = keyPairEnc.publicKey
-let secretEnc = keyPairEnc.secretKey
+let kp = Utils.generateKeypair()
 ```
 
 #### Signing Keys
@@ -187,9 +185,7 @@ let secretEnc = keyPairEnc.secretKey
 Encryption uses a sodium signature. A keypair can be generated as follows:
 
 ```swift
-let keyPairSign = sodium.sign.keyPair()!
-let publicSign = keyPairSign.publicKey
-let secretSign = keyPairSign.secretKey
+let kp = Utils.generatesigningKeypair()
 ```
 
 ### Encrypted Request Body
@@ -206,7 +202,7 @@ import CryptoSwift // For .bytes alias
 """
 
 var Request = Request(
-    secretKey: keyPairEnc.secretKey,
+    secretKey: kp.secretKey,
     publicKey: Data(base64Encoded: "").bytes! // This should be the public key provided by the server
 )
 
@@ -233,7 +229,7 @@ Responses from the server can be decrypted as follows:
 ```swift
 import CryptoSwift // For .bytes alias
 let response = Response(
-    secretKey: keyPairEnc.secretKey,
+    secretKey: kp.secretKey,
     publicKey: Data(base64Encoded: "").bytes! // This should be the public key provided by the server
 )
 
