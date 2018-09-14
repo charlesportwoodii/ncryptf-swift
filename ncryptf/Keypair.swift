@@ -34,4 +34,11 @@ extension Keypair {
     public func getSecretKey() -> Bytes {
         return self.secretKey
     }
+
+    /**
+     - Returns: Sodium keypair box
+    */
+    public func getSodiumKeypair() -> Box.KeyPair {
+        return Box.KeyPair(publicKey: self.publicKey, secretKey: self.secretKey)
+    }
 }

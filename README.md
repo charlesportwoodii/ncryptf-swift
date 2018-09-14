@@ -209,18 +209,13 @@ var Request = Request(
     publicKey: Data(base64Encoded: "").bytes! // This should be the public key provided by the server
 )
 
-let cipher = try? request.encrypt(
+guard let cipher = try? request.encrypt(
     request: payload.data(using: .utf8, allowLossyConversion: false)!
-)
-
-if let cipher = cipher {
-    // Base64 encode the encrypted data to send to the server
-    let encrypted = Data(bytes: cipher!, count: cipher!.count).base64EncodedString()
-    // Grab the generated nonce
-    let nonce = request.getNonce()
-
-    // Do your HTTP request here
+) else {
+    // Handle errors
 }
+
+// Do your HTTP request here
 ```
 
 > Note that you need to have a pre-bootstrapped public key to encrypt data. For the v1 API, this is typically this is returned by `/api/v1/server/otk`.
@@ -232,24 +227,28 @@ Responses from the server can be decrypted as follows:
 ```swift
 import CryptoSwift // For .bytes alias
 let response = Response(
-    secretKey: kp.secretKey,
-    publicKey: Data(base64Encoded: "").bytes! // This should be the public key provided by the server
+    secretKey: kp.secretKey
 )
 
-let decrypted = try? response.decrypt(
+guard let decrypted = try? response.decrypt(
     response: Data(base64Encoded: "")!.bytes, // The raw body provided in the servers http response
-    nonce: nonce // X-Nonce provided by server
-)
-
-if let decrypted = decrypted {
-    // `decrypted` now is a Data object containing the decrypted data. Convert to to a String to print
-    // Or pass to another object to initialize
-
-    // For added integrity, check the detached signature
-    let isSignatureValid = try! response.isSignatureValid(
-        response: decrypted.bytes,
-        signature: Data(base64Encoded: "").bytes! // The X-Signature header provided by the server
-        publicKey: Data(base64Encoded: "").bytes! // The X-Sig-Pub key, or similar provided by the server
-    )
+) else {
+    // Handle errors
 }
 ```
+
+### V2 Encrypted Payload
+
+Verison 2 works identical to the version 1 payload, with the exception that all components needed to decrypt the message are bundled within the payload itself, rather than broken out into separate headers. This alleviates developer concerns with needing to manage multiple headers.
+
+The version 2 payload is described as follows. Each component is concatanated together.
+
+| Segment | Length |
+|---------|--------|
+| 4 byte header `DE259002` in binary format | 4 BYTES |
+| Nonce | 24 BYTES |
+| The public key associated to the private key | 32 BYTES |
+| Encrypted Body | X BYTES |
+| Signature Public Key | 32 BYTES |
+| Signature or raw request body | 64 BYTES |
+| Checksum of prior elements concatonated together | 64 bytes |
