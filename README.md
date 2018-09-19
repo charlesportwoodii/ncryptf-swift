@@ -1,6 +1,6 @@
 # ncryptf Swift
 
-[![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/charlesportwoodii/ncryptf-php/blob/master/LICENSE.md)
+[![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/charlesportwoodii/ncryptf-swift/blob/master/LICENSE.md)
 
 | OS    | Build Status |
 |-------|------|
