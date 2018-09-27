@@ -24,7 +24,7 @@ install:
 
   # Install the latest libsodium
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      curl -sL https://swiftenv.fuller.li/install.sh | sh
+      curl -sL https://swiftenv.fuller.li/install.sh | bash
     fi
 
 before_script:
