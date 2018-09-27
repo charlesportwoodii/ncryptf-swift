@@ -1,13 +1,17 @@
 sudo: required
-
-language: c
+language: generic
+dist: trusty
 
 matrix:
   include:
     - os: linux
       dist: trusty
       sudo: required
-      env: SODIUM_VERSION=1.0.16 SWIFT_LINUX_VERSION=4.1.3 SWIFT_VAPOR_VERSION=4.1.0
+      env: SODIUM_VERSION=1.0.16 SWIFT_VERSION=swift-4.2-RELEASE
+    - os: linux
+      dist: trusty
+      sudo: required
+      env: SODIUM_VERSION=1.0.16 SWIFT_VERSION=swift-4.1-RELEASE
     - os: osx
       osx_image: xcode9.4
     - os: osx
@@ -26,14 +30,6 @@ addons:
       - libicu-dev
       - libstdc++6
 
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      wget -q https://repo.vapor.codes/apt/keyring.gpg -O- | sudo apt-key add -;
-      echo "deb https://repo.vapor.codes/apt $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/vapor.list;
-      sudo apt update -qq;
-      sudo apt-get install swift=$SWIFT_VAPOR_VERSION --no-install-recommends;
-    fi
-
 install:
   # Install libsodium on MacOS via homebrew
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
@@ -41,16 +37,7 @@ install:
 
   # Install the latest libsodium
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      cd /tmp;
-      curl -qs https://download.libsodium.org/libsodium/releases/libsodium-$SODIUM_VERSION.tar.gz -o /tmp/libsodium-$SODIUM_VERSION.tar.gz;
-      tar -xf libsodium-$SODIUM_VERSION.tar.gz;
-      cd libsodium-$SODIUM_VERSION;
-      ./configure;
-      make;
-      sudo make install;
-      echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf.d/libsodium.conf;
-      sudo ldconfig;
-      cd $TRAVIS_BUILD_DIR;
+      eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
     fi
 
 before_script:
