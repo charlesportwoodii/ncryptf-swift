@@ -27,9 +27,11 @@ addons:
       - libstdc++6
 
 before_install:
-  - sudo add-apt-repository ppa:ondrej/php -y
-  - sudo apt-get update -q
-  - sudo apt-get install libsodium-dev -y
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
+      sudo add-apt-repository ppa:ondrej/php -y;
+      sudo apt-get update -q;
+      sudo apt-get install libsodium-dev -y;
+    fi
 
 install:
   # Install libsodium on MacOS via homebrew
