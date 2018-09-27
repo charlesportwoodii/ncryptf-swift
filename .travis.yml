@@ -7,11 +7,11 @@ matrix:
     - os: linux
       dist: trusty
       sudo: required
-      env: SODIUM_VERSION=1.0.16 SWIFT_VERSION=swift-4.2-RELEASE
+      env: SODIUM_VERSION=1.0.16 SWIFT_VERSION=4.2
     - os: linux
       dist: trusty
       sudo: required
-      env: SODIUM_VERSION=1.0.16 SWIFT_VERSION=swift-4.1-RELEASE
+      env: SODIUM_VERSION=1.0.16 SWIFT_VERSION=4.1.3
     - os: osx
       osx_image: xcode9.4
     - os: osx
@@ -22,7 +22,8 @@ install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install openssl libsodium; fi
 
-  - eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
+  # Install the latest libsodium
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then eval "$(curl -sL https://swiftenv.fuller.li/install.sh)" fi
 
 before_script:
   - swift --version
