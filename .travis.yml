@@ -17,19 +17,6 @@ matrix:
     - os: osx
       osx_image: xcode10
 
-addons:
-  apt:
-    packages:
-      - wget
-      - curl
-      - ca-certificates
-      - build-essential
-      - make
-      - autoconf
-      - clang
-      - libicu-dev
-      - libstdc++6
-
 install:
   # Install libsodium on MacOS via homebrew
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
@@ -37,12 +24,10 @@ install:
 
   # Install the latest libsodium
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
+      curl -sL https://swiftenv.fuller.li/install.sh | sh
     fi
 
 before_script:
-  - cd $TRAVIS_BUILD_DIR;
-  - pwd
   - swift --version
   - swift package clean
   - swift package resolve
