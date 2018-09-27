@@ -23,21 +23,22 @@ addons:
       - wget
       - curl
       - ca-certificates
-      - build-essential
-      - make
-      - autoconf
-      - clang
       - libicu-dev
       - libstdc++6
-      - libsodium-dev
+
+before_install:
+  - sudo add-apt-repository ppa:ondrej/php -y
+  - sudo apt-get update -q
+  - sudo apt-get install libsodium-dev -y
 
 install:
   # Install libsodium on MacOS via homebrew
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install openssl libsodium; fi
-  - eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"; fi
 
 before_script:
+  - ls -laht
   - swift --version
   - swift package clean
   - swift package resolve
