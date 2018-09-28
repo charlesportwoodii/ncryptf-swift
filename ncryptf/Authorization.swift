@@ -127,4 +127,34 @@ extension Authorization {
 
         return "HMAC \(token.accessToken),\(hmac),\(salt)"
     }
+
+    /**
+     Validates a provided HMAC against an auth object and drift
+     - Parameters:
+        - hmac: 32 byte HMAC provided by the client
+        - auth: Authorization object generated from the request
+        - driftAllowance: Maximum amount of time in seconds that the request should be permitted to drift by
+     - Returns: Boolean if the HMAC is valid
+    */
+    public func verify(hmac: Bytes, auth: Authorization, driftAllowance: Int = 90) -> Bool {
+        let drift = self.getTimeDrift(date: auth.getDate())
+        if (drift >= driftAllowance) {
+            return false
+        }
+
+        if (self.sodium.utils.equals(hmac, auth.getHMAC()!)) {
+            return true
+        }
+
+        return false
+    }
+
+    /**
+     - Returns: Integer drift in seconds
+    */
+    private func getTimeDrift(date: Date) -> Int {
+        let now = Date()
+
+        return Int(abs(now.timeIntervalSince1970 - date.timeIntervalSince1970))
+    }
 }

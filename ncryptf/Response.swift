@@ -108,7 +108,7 @@ extension Response {
      - Returns: Optional<Data> containing the decrypted data
     */
     private func decryptBody(response: Bytes, nonce: Bytes) throws -> Data? {
-        guard let decryptedResponse = sodium.box.open(
+        guard let decryptedResponse = self.sodium.box.open(
             authenticatedCipherText: response,
             senderPublicKey: self.keypair!.getPublicKey(),
             recipientSecretKey: self.keypair!.getSecretKey(),
@@ -129,7 +129,7 @@ extension Response {
      - Returns: Will return true if the signature is valid, and false otherwise
     */
     public func isSignatureValid(response: Bytes, signature: Bytes, publicKey: Bytes) -> Bool {
-       return sodium.sign.verify(
+       return self.sodium.sign.verify(
             message: response,
             publicKey: publicKey,
             signature: signature

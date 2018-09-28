@@ -3,11 +3,20 @@ import Foundation
 import CryptoSwift
 @testable import ncryptf
 
-class AuthorizationTest : XCTestCase {
+internal struct Auth: Codable {
+    let access_token: String
+    let date: String
+    let hmac: String
+    let salt: String
+    let v: Int
+}
 
+class AuthorizationTest : XCTestCase {
+    
     static let allTests = [
         ("testV1HMAC", testV1HMAC),
-        ("testV2HMAC", testV2HMAC)
+        ("testV2HMAC", testV2HMAC),
+        ("testVerify", testVerify)
     ]
 
     let v1HMACHeaders = [
@@ -78,7 +87,11 @@ class AuthorizationTest : XCTestCase {
 
             XCTAssertNotNil(auth)
             if let auth = auth {
-                XCTAssertEqual(auth.getHeader()!, v1HMACHeaders[index])
+                let header = auth.getHeader()!
+                XCTAssertEqual(header, v1HMACHeaders[index])
+                let r = header.split(separator: ",")
+                let hmac = Data(base64Encoded: String(r[1]))!.bytes
+                XCTAssertEqual(false, auth.verify(hmac: hmac, auth: auth))
             } else {
                 XCTFail()
             }
@@ -99,7 +112,61 @@ class AuthorizationTest : XCTestCase {
 
             XCTAssertNotNil(auth)
             if let auth = auth {
-                XCTAssertEqual(auth.getHeader()!, v2HMACHeaders[index])
+                let header = auth.getHeader()!
+                let decoder = JSONDecoder()
+                let a = try? decoder.decode(
+                    Auth.self, 
+                    from: Data(
+                        base64Encoded: String(header.replacingOccurrences(
+                            of: "HMAC ",
+                            with: ""
+                        ))
+                    )!
+                )
+                if let a = a {
+                    let hmac = Data(base64Encoded: a.hmac)!.bytes
+                    XCTAssertEqual(false, auth.verify(hmac: hmac, auth: auth))
+                } else {
+                    XCTFail()
+                }
+                XCTAssertEqual(header, v2HMACHeaders[index])
+            } else {
+                XCTFail()
+            }
+        }
+    }
+
+    func testVerify()
+    {
+        for (_, testCase) in testCases.enumerated() {
+            let auth = try? Authorization(
+                httpMethod: testCase.httpMethod,
+                uri: testCase.uri,
+                token: token,
+                date: Date(),
+                payload: testCase.payload!,
+                version: 1,
+                salt: salt
+            )
+
+            if let auth = auth {
+                XCTAssertEqual(true, auth.verify(hmac: auth.getHMAC()!, auth: auth))
+            } else {
+                XCTFail()
+            }
+
+            let auth2 = try? Authorization(
+                httpMethod: testCase.httpMethod,
+                uri: testCase.uri,
+                token: token,
+                date: Date(),
+                payload: testCase.payload!,
+                version: 2,
+                salt: salt
+            )
+
+            if let auth2 = auth2 {
+                XCTAssertEqual(true, auth2.verify(hmac: auth2.getHMAC()!, auth: auth2))
             } else {
                 XCTFail()
             }

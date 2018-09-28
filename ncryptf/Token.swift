@@ -7,7 +7,6 @@ public struct Token {
     public var ikm: Bytes
     public var signature: Bytes
     public var expiresAt: Double
-    private let sodium = Sodium()
 }
 
 extension Token {

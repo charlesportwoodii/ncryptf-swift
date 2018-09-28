@@ -5,7 +5,6 @@ import Clibsodium
 public struct Request {
     private var keypair: Keypair
     private var nonce: Bytes?
-
     private let sodium = Sodium()
 }
 
@@ -93,7 +92,7 @@ extension Request {
      - Returns: Byte array containing the encrypted data
     */
     public mutating func encrypt(request: Data, signatureKey: Bytes? = nil, version: Int? = 2, nonce: Bytes? = nil) throws -> Bytes? {
-        self.nonce = nonce ?? sodium.box.nonce()
+        self.nonce = nonce ?? self.sodium.box.nonce()
 
         if version == 2 {
             if (signatureKey == nil || signatureKey!.count != 64) {
@@ -101,7 +100,7 @@ extension Request {
             }
 
             do {
-                let header = sodium.utils.hex2bin("DE259002")
+                let header = self.sodium.utils.hex2bin("DE259002")
                 let body = try self.encryptBody(request: request, nonce: self.nonce)
 
                 var publicKey = Array<UInt8>(repeating: 0, count: 32)
@@ -150,7 +149,7 @@ extension Request {
      - Returns: Byte array containing the encrypted data
     */
     private func encryptBody(request: Data, nonce: Bytes?) throws -> Bytes? {
-        guard let encrypted = sodium.box.seal(
+        guard let encrypted = self.sodium.box.seal(
             message: request.bytes,
             recipientPublicKey: self.keypair.getPublicKey(),
             senderSecretKey: self.keypair.getSecretKey(),
@@ -172,7 +171,7 @@ extension Request {
      - Returns: Byte array of the signature
     */
     public func sign(request: Data, secretKey: Bytes) throws -> Bytes? {
-        guard let signature = sodium.sign.signature(
+        guard let signature = self.sodium.sign.signature(
             message: request.bytes,
             secretKey: secretKey
         ) else {

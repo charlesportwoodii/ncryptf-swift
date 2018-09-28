@@ -46,7 +46,7 @@ extension Signature {
     private func getSignatureHash(data: Data, salt: Bytes, version: Int? = 2) -> String? {
         let hash: String?
         if version == 2 {
-            let genericHash = sodium.genericHash.hash(message: data.bytes, key: salt, outputLength: 64)!
+            let genericHash = self.sodium.genericHash.hash(message: data.bytes, key: salt, outputLength: 64)!
             // sodium.utils.bin2base64() returns a malformed string
             hash = Data(bytes: genericHash, count: genericHash.count).base64EncodedString()
         } else {
