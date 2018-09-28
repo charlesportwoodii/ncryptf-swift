@@ -1,4 +1,4 @@
-// swift-tools-version:4.2
+// swift-tools-version:4.1
 // - Author: Charles R. Portwood II
 // - Copyright: (c) 2018-present Charles R. Portwood II
 import PackageDescription
