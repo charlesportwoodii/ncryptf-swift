@@ -102,6 +102,14 @@ extension Response {
      - Returns: Optional<Data> containing the decrypted data
     */
     private func decryptBody(response: Bytes, publicKey: Bytes, nonce: Bytes) throws -> Data? {
+        if publicKey.count != self.sodium.box.PublicKeyBytes {
+            throw ncryptfError.invalidArgument
+        }
+
+        if response.count < self.sodium.box.MacBytes {
+            throw ncryptfError.invalidArgument
+        }
+
         guard let decryptedResponse = self.sodium.box.open(
             authenticatedCipherText: response,
             senderPublicKey: publicKey,

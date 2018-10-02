@@ -104,6 +104,10 @@ extension Request {
      - Returns: Byte array containing the encrypted data
     */
     private func encryptBody(request: Data, publicKey: Bytes, nonce: Bytes) throws -> Bytes? {
+        if publicKey.count != self.sodium.box.PublicKeyBytes {
+            throw ncryptfError.invalidArgument
+        }
+
         guard let encrypted = self.sodium.box.seal(
             message: request.bytes,
             recipientPublicKey: publicKey,
