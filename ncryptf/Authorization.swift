@@ -17,10 +17,6 @@ public struct Authorization {
 }
 
 extension Authorization {
-    public enum Error : Swift.Error {
-        case derivationError
-    }
-
     /**
      Returns an authorization object
      - Parameters:
@@ -61,7 +57,7 @@ extension Authorization {
             self.hmac = try HMAC(key: hkdf.toHexString(), variant: VARIANT)
                 .authenticate(signatureBytes)
         } catch {
-            throw Error.derivationError
+            throw ncryptfError.keyDerivation
         }
     }
 

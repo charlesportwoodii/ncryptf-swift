@@ -7,7 +7,9 @@ import CryptoSwift
 class RequestResponseTest : XCTestCase {
     static let allTests = [
         ("testv1EncryptDecrypt", testv1EncryptDecrypt),
-        ("testv2EncryptDecrypt", testv2EncryptDecrypt)
+        ("testv2EncryptDecrypt", testv2EncryptDecrypt),
+        ("testPublicKeyExtraction", testPublicKeyExtraction),
+        ("testVersion", testVersion)
     ]
 
     let clientKeyPairSecret = Data(base64Encoded: "bvV/vnfB43spmprI8aBK/Fd8xxSBlx7EhuxfxxTVI2o=")!.bytes
@@ -52,21 +54,22 @@ class RequestResponseTest : XCTestCase {
 
     func testv2EncryptDecrypt()
     {
-        var request = Request(
-            secretKey: clientKeyPairSecret,
-            publicKey: serverKeyPairPublic
+        var request = try! Request(
+            secretKey: self.clientKeyPairSecret,
+            signatureSecretKey: self.signatureKeyPairSecret
         )
 
         let cipher = try! request.encrypt(
             request: payload.toData()!,
-            signatureKey: signatureKeyPairSecret,
-            nonce: nonce
+            publicKey: self.serverKeyPairPublic,
+            version: 2,
+            nonce: self.nonce
         )
 
-        XCTAssertEqual(cipher!, expectedv2Cipher);
+        XCTAssertEqual(cipher!, self.expectedv2Cipher);
 
-        var response = Response(
-            secretKey: serverKeyPairSecret
+        let response = try! Response(
+            secretKey: self.serverKeyPairSecret
         )
 
         let decrypted = try! response.decrypt(
@@ -78,32 +81,33 @@ class RequestResponseTest : XCTestCase {
 
     func testv1EncryptDecrypt()
     {
-        var request = Request(
-            secretKey: clientKeyPairSecret,
-            publicKey: serverKeyPairPublic
+        var request = try! Request(
+            secretKey: self.clientKeyPairSecret,
+            signatureSecretKey: self.signatureKeyPairSecret
         )
 
         let cipher = try! request.encrypt(
             request: payload.toData()!,
+            publicKey: self.serverKeyPairPublic,
+            version: 1,
             nonce: nonce
         )
 
         let signature = try! request.sign(
-            request: payload.toData()!,
-            secretKey: signatureKeyPairSecret
+            request: payload.toData()!
         )
 
         XCTAssertEqual(cipher!, expectedCipher);
         XCTAssertEqual(signature!, expectedSignature);
 
-        var response = Response(
-            secretKey: serverKeyPairSecret,
-            publicKey: clientKeyPairPublic
+        let response = try! Response(
+            secretKey: self.serverKeyPairSecret
         )
 
         let decrypted = try! response.decrypt(
             response: cipher!,
-            nonce: nonce
+            publicKey: self.clientKeyPairPublic,
+            nonce: self.nonce
         )
 
         XCTAssertEqual(payload.toData()!, decrypted)
@@ -115,5 +119,17 @@ class RequestResponseTest : XCTestCase {
         )
 
         XCTAssert(isSignatureValid)
+    }
+
+    func testPublicKeyExtraction()
+    {
+        let publicKey = try! Response.getPublicKeyFromResponse(response: self.expectedv2Cipher)
+        XCTAssertEqual(self.clientKeyPairPublic, publicKey)
+    }
+
+    func testVersion()
+    {
+        XCTAssertEqual(1, try! Response.getVersion(response: self.expectedCipher))
+        XCTAssertEqual(2, try! Response.getVersion(response: self.expectedv2Cipher))
     }
 }

@@ -204,13 +204,15 @@ import CryptoSwift // For .bytes alias
 }
 """
 
-var Request = Request(
-    secretKey: kp.secretKey,
-    publicKey: Data(base64Encoded: "").bytes! // This should be the public key provided by the server
-)
+guard var Request = Request(
+    secretKey: kp.secretKey
+) else {
+    // Handle initializatiojn errors
+}
 
 guard let cipher = try? request.encrypt(
-    request: payload.data(using: .utf8, allowLossyConversion: false)!
+    request: payload.data(using: .utf8, allowLossyConversion: false)!,
+    publicKey: publicKey // 32 byte public key from server
 ) else {
     // Handle errors
 }
@@ -226,9 +228,12 @@ Responses from the server can be decrypted as follows:
 
 ```swift
 import CryptoSwift // For .bytes alias
-let response = Response(
+
+guard let response = Response(
     secretKey: kp.secretKey
-)
+) else {
+    // Handle initialization errors
+}
 
 guard let decrypted = try? response.decrypt(
     response: Data(base64Encoded: "")!.bytes, // The raw body provided in the servers http response
@@ -251,4 +256,4 @@ The version 2 payload is described as follows. Each component is concatanated to
 | Encrypted Body | X BYTES |
 | Signature Public Key | 32 BYTES |
 | Signature or raw request body | 64 BYTES |
-| Checksum of prior elements concatonated together | 64 bytes |
+| Checksum of prior elements concatonated together | 64 BYTES |

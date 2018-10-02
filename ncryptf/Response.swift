@@ -2,97 +2,90 @@ import Foundation
 import Sodium
 
 public struct Response {
-    private var keypair: Keypair?
-    private let secretKey: Bytes
+    private var secretKey: Bytes
     private let sodium = Sodium()
+    
+    /**
+     Constructs a new response object
+     - Parameters:
+        - secretKey: Clients private key
+     - Throws: `ncryptf.invalidArgument`
+               If the secret key length is invalid
+    */
+    public init(secretKey: Bytes) throws {
+        if secretKey.count != self.sodium.box.SecretKeyBytes {
+            throw ncryptfError.invalidArgument
+        }
+
+        self.secretKey = secretKey
+    }
 }
 
 extension Response {
-    public enum DecryptionError : Error {
-        case decryptionFailed
-        case invalidChecksum
-        case invalidSignature
-    }
-
-    /**
-     Constructs a new response object
-     - Parameters:
-        - secretKey: Clients private key
-    */
-    public init(secretKey: Bytes) {
-        self.secretKey = secretKey
-        self.keypair = nil
-    }
-
-    /**
-     Constructs a new response object
-     - Parameters:
-        - secretKey: Clients private key
-        - publicKey: Server's public key
-    */
-    public init(secretKey: Bytes, publicKey: Bytes) {
-        self.secretKey = secretKey
-        self.keypair = Keypair(secretKey: secretKey, publicKey: publicKey)
-    }
-
     /**
      Decrypts a response
      - Parameters:
         - response: Raw response to decrypt
      - Return: Decrypted data
     */
-    public mutating func decrypt(response: Bytes) throws -> Data? {
-        let nonce = Array(response[4..<28])
-        do {
-            let response = try self.decrypt(response: response, nonce: nonce)
-            return response
-        } catch DecryptionError.invalidChecksum {
-            throw DecryptionError.invalidChecksum
-        } catch DecryptionError.invalidSignature {
-            throw DecryptionError.invalidSignature
-        } catch {
-            throw DecryptionError.decryptionFailed
+    public func decrypt(response: Bytes) throws -> Data? {
+        if response.count < 236 {
+            throw ncryptfError.invalidArgument
         }
+
+        let nonce = Array(response[4..<28])
+        let response = try self.decrypt(response: response, publicKey: nil, nonce: nonce)
+        return response
     }
 
     /**
      Decrypts a versioned response
      - Parameters:
         - response: Raw response to decrypt
+        - publicKey: 32 byte public key
         - nonce: 24 byte nonce
      - Return: Decrypted data
     */
-    public mutating func decrypt(response: Bytes, nonce: Bytes) throws -> Data? {
-        let version = self.getVersion(response: response)
-        if (version == 2) {
+    public func decrypt(response: Bytes, publicKey: Bytes?, nonce: Bytes) throws -> Data? {
+        guard let version = try? Response.getVersion(response: response) else {
+            throw ncryptfError.invalidArgument
+        }
+
+        if version == 2 {
+            if response.count < 236 {
+                throw ncryptfError.invalidArgument
+            }
+
             let payload = Array(response[0..<(response.count - 64)])
             let checksum = Array(response[(response.count - 64)..<response.count])
 
             let calculatedChecksum = self.sodium.genericHash.hash(message: payload, key: nonce, outputLength: 64)
             if !checksum.elementsEqual(calculatedChecksum!) {
-                throw DecryptionError.invalidChecksum
+                throw ncryptfError.invalidChecksum
             }
 
-            let publicKey = Array(response[28..<60])
+            let cPublicKey = Array(response[28..<60])
             let signature = Array(payload[(payload.count - 64)..<payload.count])
             let sigPubKey = Array(payload[(payload.count - 96)..<(payload.count - 64)])
             let body = Array(payload[60..<(payload.count - 96)])
 
-            self.keypair = Keypair(publicKey: publicKey, secretKey: self.secretKey)
-
-            guard let decryptedPayload = try? self.decryptBody(response: body, nonce: nonce) else {
-                throw DecryptionError.decryptionFailed
+            guard let decryptedPayload = try? self.decryptBody(response: body, publicKey: cPublicKey, nonce: nonce) else {
+                throw ncryptfError.decryptionFailed
             }
 
             if !self.isSignatureValid(response: decryptedPayload!.bytes, signature: signature, publicKey: sigPubKey) {
-                throw DecryptionError.invalidSignature
+                throw ncryptfError.invalidSignature
             }
 
             return decryptedPayload
         }
 
-        guard let response = try? self.decryptBody(response: response, nonce: nonce) else {
-            throw DecryptionError.decryptionFailed
+        if publicKey == nil || publicKey!.count < self.sodium.box.PublicKeyBytes {
+            throw ncryptfError.invalidArgument
+        }
+
+        guard let response = try? self.decryptBody(response: response, publicKey: publicKey!, nonce: nonce) else {
+            throw ncryptfError.decryptionFailed
         }
 
         return response
@@ -102,19 +95,20 @@ extension Response {
      Decrypts a response using the raw byte data and 24 byte nonce returned by the server
      - Parameters:
         - response: Raw response returned by the server
+        - publicKey: 32 byte public key
         - nonce: 24 byte nonce returned by the server
-     - Throws: `DecryptionError.decryptionFailed`
+     - Throws: `ncryptfError.decryptionFailed`
                 If the response cannot be decrypted
      - Returns: Optional<Data> containing the decrypted data
     */
-    private func decryptBody(response: Bytes, nonce: Bytes) throws -> Data? {
+    private func decryptBody(response: Bytes, publicKey: Bytes, nonce: Bytes) throws -> Data? {
         guard let decryptedResponse = self.sodium.box.open(
             authenticatedCipherText: response,
-            senderPublicKey: self.keypair!.getPublicKey(),
-            recipientSecretKey: self.keypair!.getSecretKey(),
+            senderPublicKey: publicKey,
+            recipientSecretKey: self.secretKey,
             nonce: nonce
         ) else {
-            throw DecryptionError.decryptionFailed
+            throw ncryptfError.decryptionFailed
         }
 
         return Data(bytes: decryptedResponse)
@@ -137,14 +131,45 @@ extension Response {
     }
 
     /**
+     Extracts the public key from the response
+     - Parameters:
+        - response: Raw response returned by server
+     - Returns: 32 public key bytes
+     - Throws: `ncryptfError.invalidArgument`
+                If the response length is too short.
+    */
+    public static func getPublicKeyFromResponse(response: Bytes) throws -> Bytes? {
+        guard let version = try? Response.getVersion(response: response) else {
+            throw ncryptfError.invalidArgument
+        }
+
+        if version == 2 {
+            if response.count < 236 {
+                throw ncryptfError.invalidArgument
+            }
+
+            return Array(response[28..<60])
+        }
+
+        throw ncryptfError.invalidArgument
+    }
+
+    /**
      Returns the version number used in the payload
      - Parameters:
         - response: Raw response returned by server
      - Returns: Integer representation of the version being used by the payload
+     - Throws: `ncryptfError.invalidArgument`
+                If the response length is too short/
     */
-    private func getVersion(response: Bytes) -> Int {
+    public static func getVersion(response: Bytes) throws -> Int {
+        let sodium = Sodium()
+        if response.count < 16 {
+            throw ncryptfError.invalidArgument
+        }
+
         let header = Array(response[0..<4])
-        let hex = self.sodium.utils.bin2hex(header)!.uppercased()
+        let hex = sodium.utils.bin2hex(header)!.uppercased()
 
         if (hex == "DE259002") {
             return 2

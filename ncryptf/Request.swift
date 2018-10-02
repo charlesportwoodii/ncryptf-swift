@@ -3,117 +3,72 @@ import Sodium
 import Clibsodium
 
 public struct Request {
-    private var keypair: Keypair
+    private var secretKey: Bytes
+    private var signatureSecretKey: Bytes
     private var nonce: Bytes?
     private let sodium = Sodium()
-}
-
-extension Request {
-    public enum EncryptionError : Error {
-        case encryptionFailed
-        case signingFailed
-        case invalidArgument
-    }
 
     /**
      Constructs a new request object
      - Parameters:
         - secretKey: Clients private key
-        - publicKey: Server's public key
+        - signatureSecretKey: Server's public key
+     - Throws: `ncryptfError.invalidArgument`
+        If the inputs don't match the expected length
     */
-    public init(secretKey: Bytes, publicKey: Bytes) {
-        self.keypair = Keypair(publicKey: publicKey, secretKey: secretKey)
-    }
-
-    /**
-     Encrypts a plain text response
-     - Parameters:
-        - request: Data representation of the data to encrypt (plain text)
-        - nonce: Optional 24 byte nonce.
-                 If a nonce is not provided, one will be generated
-     - Throws: `EncryuptionError.encryptionFailed`
-               If the request cannot be encrypted, an error will be thrown
-     - Returns: Byte array containing the encrypted data
-    */
-    public mutating func encrypt(request: Data, nonce: Bytes? = nil) throws -> Bytes? {
-        guard let encrypted = try? self.encrypt(request: request, signatureKey: nil, version: 1, nonce: nonce) else {
-            throw EncryptionError.encryptionFailed
+    public init(secretKey: Bytes, signatureSecretKey: Bytes) throws {
+        if secretKey.count != self.sodium.box.SecretKeyBytes {
+            throw ncryptfError.invalidArgument
         }
 
-        return encrypted
-    }
+        self.secretKey = secretKey
 
-    /**
-     Encrypts a plain text response
-     - Parameters:
-        - request: Data representation of the data to encrypt (plain text)
-        - signatureKey: 32 byte signature key. Optional for v1, required for v2
-     - Throws: `EncryuptionError.encryptionFailed`
-               If the request cannot be encrypted, an error will be thrown
-     - Returns: Byte array containing the encrypted data
-    */
-    public mutating func encrypt(request: Data, signatureKey: Bytes? = nil) throws -> Bytes? {
-        guard let encrypted = try? self.encrypt(request: request, signatureKey: signatureKey, version: 2, nonce: nil) else {
-            throw EncryptionError.encryptionFailed
+        if signatureSecretKey.count != self.sodium.sign.SecretKeyBytes {
+            throw ncryptfError.invalidArgument
         }
-
-        return encrypted
+        
+        self.signatureSecretKey = signatureSecretKey
     }
+}
 
+extension Request {
     /**
      Encrypts a plain text response
      - Parameters:
         - request: Data representation of the data to encrypt (plain text)
-        - signatureKey: 32 byte signature key. Optional for v1, required for v2
-        - nonce: Optional 24 byte nonce.
-                 If a nonce is not provided, one will be generated
-     - Throws: `EncryuptionError.encryptionFailed`
-               If the request cannot be encrypted, an error will be thrown
-     - Returns: Byte array containing the encrypted data
-    */
-    public mutating func encrypt(request: Data, signatureKey: Bytes? = nil, nonce: Bytes? = nil) throws -> Bytes? {
-        guard let encrypted = try? self.encrypt(request: request, signatureKey: signatureKey, version: 2, nonce: nonce) else {
-            throw EncryptionError.encryptionFailed
-        }
-
-        return encrypted
-    }
-
-    /**
-     Encrypts a plain text response
-     - Parameters:
-        - request: Data representation of the data to encrypt (plain text)
-        - signatureKey: 32 byte signature key. Optional for v1, required for v2
+        - remotePublicKey: 32 byte public key.
         - version: Version to use
         - nonce: Optional 24 byte nonce.
                  If a nonce is not provided, one will be generated
-     - Throws: `EncryuptionError.encryptionFailed`
+     - Throws: `ncryptfError.encryptionFailed`
                If the request cannot be encrypted, an error will be thrown
+               `ncryptfError.invalidArgument`
+               If the remotePublicKey byte length does not meet the minimum length
      - Returns: Byte array containing the encrypted data
     */
-    public mutating func encrypt(request: Data, signatureKey: Bytes? = nil, version: Int? = 2, nonce: Bytes? = nil) throws -> Bytes? {
+    public mutating func encrypt(request: Data, publicKey: Bytes, version: Int? = 2, nonce: Bytes? = nil) throws -> Bytes? {
         self.nonce = nonce ?? self.sodium.box.nonce()
 
-        if version == 2 {
-            if (signatureKey == nil || signatureKey!.count != 64) {
-                throw EncryptionError.invalidArgument
-            }
+        if publicKey.count != self.sodium.box.PublicKeyBytes {
+            throw ncryptfError.invalidArgument
+        }
 
+        if version == 2 {
             do {
                 let header = self.sodium.utils.hex2bin("DE259002")
-                let body = try self.encryptBody(request: request, nonce: self.nonce)
+                let body = try self.encryptBody(request: request, publicKey: publicKey, nonce: self.nonce!)
 
                 var publicKey = Array<UInt8>(repeating: 0, count: 32)
-                if crypto_scalarmult_base(&publicKey, self.keypair.getSecretKey()) != 0 {
-                    throw EncryptionError.encryptionFailed
+                if crypto_scalarmult_base(&publicKey, self.secretKey) != 0 {
+                    throw ncryptfError.encryptionFailed
                 }
 
                 var sigPubKey = Array<UInt8>(repeating: 0, count: 32)
-                if crypto_sign_ed25519_sk_to_pk(&sigPubKey, signatureKey!) != 0 {
-                    throw EncryptionError.encryptionFailed
+                if crypto_sign_ed25519_sk_to_pk(&sigPubKey, self.signatureSecretKey) != 0 {
+                    throw ncryptfError.encryptionFailed
                 }
 
-                let signature = try self.sign(request: request, secretKey: signatureKey!)
+                let signature = try self.sign(request: request)
 
                 let payload = header! + 
                     self.nonce! +
@@ -122,19 +77,19 @@ extension Request {
                     sigPubKey +
                     signature!
                 
-                let checksum = self.sodium.genericHash.hash(message: payload, key: self.nonce, outputLength: 64)
+                let checksum = self.sodium.genericHash.hash(message: payload, key: self.nonce!, outputLength: 64)
 
                 return payload + checksum!
             } catch {
-                throw EncryptionError.encryptionFailed
+                throw ncryptfError.encryptionFailed
             }
 
         }
 
-        if let encrypted = try? self.encryptBody(request: request, nonce: self.nonce) {
+        if let encrypted = try? self.encryptBody(request: request, publicKey: publicKey, nonce: self.nonce!) {
             return encrypted
         } else {
-            throw EncryptionError.encryptionFailed
+            throw ncryptfError.encryptionFailed
         }
     }
 
@@ -142,20 +97,20 @@ extension Request {
      Encrypts a plain text response
      - Parameters:
         - request: Data representation of the data to encrypt (plain text)
-        - nonce: Optional 24 byte nonce.
-                 If a nonce is not provided, one will be generated
+        - publicKey: 32 byte public key
+        - nonce: 24 byte nonce.
      - Throws: `EncryuptionError.encryptionFailed`
                If the request cannot be encrypted, an error will be thrown
      - Returns: Byte array containing the encrypted data
     */
-    private func encryptBody(request: Data, nonce: Bytes?) throws -> Bytes? {
+    private func encryptBody(request: Data, publicKey: Bytes, nonce: Bytes) throws -> Bytes? {
         guard let encrypted = self.sodium.box.seal(
             message: request.bytes,
-            recipientPublicKey: self.keypair.getPublicKey(),
-            senderSecretKey: self.keypair.getSecretKey(),
-            nonce: nonce!
+            recipientPublicKey: publicKey,
+            senderSecretKey: self.secretKey,
+            nonce: nonce
         ) else {
-            throw EncryptionError.encryptionFailed
+            throw ncryptfError.encryptionFailed
         }
 
         return encrypted
@@ -170,12 +125,12 @@ extension Request {
                An error will be thrown if signing is unable to succeed
      - Returns: Byte array of the signature
     */
-    public func sign(request: Data, secretKey: Bytes) throws -> Bytes? {
+    public func sign(request: Data) throws -> Bytes? {
         guard let signature = self.sodium.sign.signature(
             message: request.bytes,
-            secretKey: secretKey
+            secretKey: self.signatureSecretKey
         ) else {
-            throw EncryptionError.signingFailed
+            throw ncryptfError.signingFailed
         }
 
         return signature
