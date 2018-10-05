@@ -4,8 +4,8 @@
 
 | OS    | Build Status |
 |-------|------|
-| Linux | [![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/linux?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
-| MacOS | [![](https://travis-ci-job-status.herokuapp.com/badge/charlesportwoodii/ncryptf-swift/master/osx?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
+| Linux | [![](https://travis-ci-job-status.herokuapp.com/badge/ncryptf/ncryptf-swift/master/linux?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
+| MacOS | [![](https://travis-ci-job-status.herokuapp.com/badge/ncryptf/ncryptf-swift/master/osx?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
 
 
 <center>
@@ -20,7 +20,7 @@ This library can be installed via Swift Package Manager by adding the following 
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/charlesportwoodii/ncryptf-swift.git", , .upToNextMinor(from: "0.1.3")),
+    .package(url: "https://github.com/charlesportwoodii/ncryptf-swift.git", , .upToNextMinor(from: "0.2.0")),
 ],
 ```
 
