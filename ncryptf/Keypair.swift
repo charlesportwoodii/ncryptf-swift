@@ -3,8 +3,8 @@ import Sodium
 import CryptoSwift
 
 public struct Keypair {
-    public var publicKey: Bytes
-    public var secretKey: Bytes
+    private var publicKey: Bytes
+    private var secretKey: Bytes
     private let sodium = Sodium()
 }
 

@@ -1,7 +1,6 @@
 import Foundation
 
 internal extension DateFormatter {
-
     static var rfc1123: DateFormatter {
         struct Static {
             static var dateFormatter: DateFormatter {
