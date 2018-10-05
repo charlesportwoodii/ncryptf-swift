@@ -35,11 +35,11 @@ class SignatureTest : XCTestCase {
 
     let date = Date(timeIntervalSince1970: 1533310068)
     let salt = Data(base64Encoded:"efEY/IJdAbi474TtQCCjj2y1FGB4BFFPpbHm/1QtpyI=")!.bytes
-    let token = Token(
+    let token = try! Token(
         accessToken: "x2gMeJ5Np0CcKpZav+i9iiXeQBtaYMQ/yeEtcOgY3J",
         refreshToken: "LRSEe5zHb1aq20Hr9te2sQF8sLReSkO8bS1eD/9LDM8",
         ikm: Data(base64Encoded:"f2mTaH9vkZZQyF7SxVeXDlOSDbVwjUzhdXv2T/YYO8k=")!,
-        signature: Data(base64Encoded: "waWBMawHD1zpAFRcX7e45L1aqsA3mEeSOwXqq4l1i3I=")!,
+        signature: Data(base64Encoded: "7v/CdiGoEI7bcj7R2EyDPH5nrCd2+7rHYNACB+Kf2FMx405und2KenGjNpCBPv0jOiptfHJHiY3lldAQTGCdqw==")!,
         expiresAt: Date().adding( minutes: (4 * 60)).timeIntervalSince1970
     )
     

@@ -25,16 +25,16 @@ public class Utils {
     /**
      - Returns: Crypto box Keypair
     */
-    public static func generateKeypair() -> Keypair {
+    public static func generateKeypair() throws -> Keypair {
         let kp = self.sodium.box.keyPair()!
-        return Keypair(secretKey: kp.secretKey, publicKey: kp.publicKey)
+        return try Keypair(secretKey: kp.secretKey, publicKey: kp.publicKey)
     }
 
     /**
      - Returns: Crypto sign Keypair
     */
-    public static func generateSigningKeypair() -> Keypair {
+    public static func generateSigningKeypair() throws -> Keypair {
         let kp = self.sodium.sign.keyPair()!
-        return Keypair(secretKey: kp.secretKey, publicKey: kp.publicKey)
+        return try Keypair(secretKey: kp.secretKey, publicKey: kp.publicKey)
     }
 }

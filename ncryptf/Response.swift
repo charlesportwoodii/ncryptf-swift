@@ -51,6 +51,10 @@ extension Response {
             throw ncryptfError.invalidArgument
         }
 
+        if nonce.count != 24 {
+            throw ncryptfError.invalidArgument
+        }
+
         if version == 2 {
             if response.count < 236 {
                 throw ncryptfError.invalidArgument
@@ -73,7 +77,11 @@ extension Response {
                 throw ncryptfError.decryptionFailed
             }
 
-            if !self.isSignatureValid(response: decryptedPayload!.bytes, signature: signature, publicKey: sigPubKey) {
+            guard let isSignatureValid = try? self.isSignatureValid(response: decryptedPayload!.bytes, signature: signature, publicKey: sigPubKey) else {
+                throw ncryptfError.invalidSignature
+            }
+
+            if !isSignatureValid {
                 throw ncryptfError.invalidSignature
             }
 
@@ -106,6 +114,10 @@ extension Response {
             throw ncryptfError.invalidArgument
         }
 
+        if nonce.count != 24 {
+            throw ncryptfError.invalidArgument
+        }
+
         if response.count < self.sodium.box.MacBytes {
             throw ncryptfError.invalidArgument
         }
@@ -130,8 +142,17 @@ extension Response {
         - publicKey: The signature public key provided by the server
      - Returns: Will return true if the signature is valid, and false otherwise
     */
-    public func isSignatureValid(response: Bytes, signature: Bytes, publicKey: Bytes) -> Bool {
-       return self.sodium.sign.verify(
+    public func isSignatureValid(response: Bytes, signature: Bytes, publicKey: Bytes) throws -> Bool {
+        
+        if signature.count != 64 {
+            throw ncryptfError.invalidArgument
+        }
+
+        if publicKey.count != self.sodium.sign.PublicKeyBytes {
+            throw ncryptfError.invalidArgument
+        }
+
+        return self.sodium.sign.verify(
             message: response,
             publicKey: publicKey,
             signature: signature
@@ -172,7 +193,7 @@ extension Response {
     */
     public static func getVersion(response: Bytes) throws -> Int {
         let sodium = Sodium()
-        if response.count < 16 {
+        if response.count < sodium.box.MacBytes {
             throw ncryptfError.invalidArgument
         }
 

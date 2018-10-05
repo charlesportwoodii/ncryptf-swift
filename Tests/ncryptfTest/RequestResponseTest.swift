@@ -112,7 +112,7 @@ class RequestResponseTest : XCTestCase {
 
         XCTAssertEqual(payload.toData()!, decrypted)
         
-        let isSignatureValid = response.isSignatureValid(
+        let isSignatureValid = try! response.isSignatureValid(
             response: payload.toData()!.bytes,
             signature: signature!,
             publicKey: signatureKeyPairPublic

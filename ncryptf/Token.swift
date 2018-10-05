@@ -20,10 +20,20 @@ extension Token {
         - signature: The signature date returned by the API
         - expiresAt: The expiration time returned by the API
     */
-    public init (accessToken: String, refreshToken: String, ikm: Data, signature: Data, expiresAt: Double) {
+    public init (accessToken: String, refreshToken: String, ikm: Data, signature: Data, expiresAt: Double) throws {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
+
+        if ikm.count != 32  {
+            throw ncryptfError.invalidArgument
+        }
+
         self.ikm = [UInt8](ikm)
+
+        if signature.count != 64 {
+            throw ncryptfError.invalidArgument
+        }
+
         self.signature = [UInt8](signature)
         self.expiresAt = expiresAt
     }
@@ -33,7 +43,6 @@ extension Token {
     */
     public func isExpired() -> Bool {
         let now = Date().timeIntervalSince1970;
-
         return now > expiresAt
     }
 }

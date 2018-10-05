@@ -21,13 +21,13 @@ class UtilsTest : XCTestCase {
     }
 
     func testKeypairGeneration() {
-        let kp = ncryptf.Utils.generateKeypair()
+        let kp = try! ncryptf.Utils.generateKeypair()
         XCTAssertEqual(32, kp.getPublicKey().count)
         XCTAssertEqual(32, kp.getSecretKey().count)
     }
 
     func testSigningKeypairGeneration() {
-        let kp = ncryptf.Utils.generateSigningKeypair()
+        let kp = try! ncryptf.Utils.generateSigningKeypair()
         XCTAssertEqual(32, kp.getPublicKey().count)
         XCTAssertEqual(64, kp.getSecretKey().count)
     }

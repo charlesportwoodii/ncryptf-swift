@@ -49,6 +49,10 @@ extension Request {
     public mutating func encrypt(request: Data, publicKey: Bytes, version: Int? = 2, nonce: Bytes? = nil) throws -> Bytes? {
         self.nonce = nonce ?? self.sodium.box.nonce()
 
+        if nonce!.count != 24 {
+            throw ncryptfError.invalidArgument
+        }
+
         if publicKey.count != self.sodium.box.PublicKeyBytes {
             throw ncryptfError.invalidArgument
         }
@@ -105,6 +109,10 @@ extension Request {
     */
     private func encryptBody(request: Data, publicKey: Bytes, nonce: Bytes) throws -> Bytes? {
         if publicKey.count != self.sodium.box.PublicKeyBytes {
+            throw ncryptfError.invalidArgument
+        }
+
+        if nonce.count != 24 {
             throw ncryptfError.invalidArgument
         }
 
