@@ -9,7 +9,7 @@
 
 
 <center>
-    <img src="https://github.com/charlesportwoodii/ncryptf-swift/blob/master/logo.png?raw=true" alt="ncryptf logo" width="400px"/>
+    <img src="https://github.com/ncryptf/ncryptf-swift/blob/master/logo.png?raw=true" alt="ncryptf logo" width="400px"/>
 </center>
 
 A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
@@ -20,7 +20,7 @@ This library can be installed via Swift Package Manager by adding the following 
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/charlesportwoodii/ncryptf-swift.git", , .upToNextMinor(from: "0.2.0")),
+    .package(url: "https://github.com/ncryptf/ncryptf-swift.git", , .upToNextMinor(from: "0.2.0")),
 ],
 ```
 
