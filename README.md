@@ -11,7 +11,7 @@
 
 
 <center>
-    <img src="https://github.com/charlesportwoodii/ncryptf-swift/blob/master/logo.png?raw=true" alt="ncryptf logo" width="400px"/>
+    <img src="https://github.com/ncryptf/ncryptf-swift/blob/master/logo.png?raw=true" alt="ncryptf logo" width="400px"/>
 </center>
 
 A library for facilitating hashed based KDF signature authentication, and end-to-end encrypted communication with compatible API's.
@@ -22,7 +22,7 @@ This library can be installed via Swift Package Manager by adding the following 
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/charlesportwoodii/ncryptf-swift.git", , .upToNextMinor(from: "0.2.0")),
+    .package(url: "https://github.com/ncryptf/ncryptf-swift.git", , .upToNextMinor(from: "0.2.0")),
 ],
 ```
 
@@ -162,7 +162,7 @@ The Version 1 HMAC header requires an additional `X-Date` header. The `X-Date` h
 
 ## Encrypted Requests & Responses
 
-This library enables clients coding in PHP 7.1+ to establish and trusted encrypted session on top of a TLS layer, while simultaniously (and independently) providing the ability authenticate and identify a client via HMAC+HKDF style authentication.
+This library enables clients to establish and trusted encrypted session on top of a TLS layer, while simultaniously (and independently) providing the ability authenticate and identify a client via HMAC+HKDF style authentication.
 
 The rationale for this functionality includes but is not limited to:
 
