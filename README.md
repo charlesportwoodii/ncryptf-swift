@@ -1,11 +1,11 @@
 # ncryptf Swift
 
-[![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/charlesportwoodii/ncryptf-swift/blob/master/LICENSE.md)
+[![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/ncryptf/ncryptf-swift/blob/master/LICENSE.md)
 
 | OS    | Build Status |
 |-------|------|
-| Linux | [![](https://travis-ci-job-status.herokuapp.com/badge/ncryptf/ncryptf-swift/master/linux?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
-| MacOS | [![](https://travis-ci-job-status.herokuapp.com/badge/ncryptf/ncryptf-swift/master/osx?style=flat-square)](https://travis-ci.org/charlesportwoodii/ncryptf-swift) |
+| Linux | [![](https://travis-ci-job-status.herokuapp.com/badge/ncryptf/ncryptf-swift/master/linux?style=flat-square)](https://travis-ci.org/ncryptf/ncryptf-swift) |
+| MacOS | [![](https://travis-ci-job-status.herokuapp.com/badge/ncryptf/ncryptf-swift/master/osx?style=flat-square)](https://travis-ci.org/ncryptf/ncryptf-swift) |
 
 
 <center>
