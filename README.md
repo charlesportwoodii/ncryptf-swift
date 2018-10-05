@@ -72,7 +72,7 @@ Supporting API's will return the following payload containing at minimum the fol
     "access_token": "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA",
     "refresh_token": "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA",
     "ikm": "bDEyECRvKKE8w81fX4hz/52cvHsFPMGeJ+a9fGaVvWM=",
-    "signing": "ecYXfAwNVoS9ePn4xWhiJOdXQzr6LpJIeIn4AVju/Ug=",
+    "signing": "7v/CdiGoEI7bcj7R2EyDPH5nrCd2+7rHYNACB+Kf2FMx405und2KenGjNpCBPv0jOiptfHJHiY3lldAQTGCdqw==",
     "expires_at": 1472678411
 }
 ```
@@ -100,7 +100,7 @@ let token = Token(
     accessToken: "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA",
     refreshToken: "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA",
     ikm: Data(base64Encoded: "bDEyECRvKKE8w81fX4hz/52cvHsFPMGeJ+a9fGaVvWM=")!,
-    signature: Data(base64Encoded: "ecYXfAwNVoS9ePn4xWhiJOdXQzr6LpJIeIn4AVju/Ug=")!,
+    signature: Data(base64Encoded: "7v/CdiGoEI7bcj7R2EyDPH5nrCd2+7rHYNACB+Kf2FMx405und2KenGjNpCBPv0jOiptfHJHiY3lldAQTGCdqw==")!,
     expiresAt: Date(timeIntervalSinceReferenceDate: 1472678411)
 )
 
@@ -188,7 +188,7 @@ let kp = Utils.generateKeypair()
 Encryption uses a sodium signature. A keypair can be generated as follows:
 
 ```swift
-let kp = Utils.generatesigningKeypair()
+let kp = Utils.generateSigningKeypair()
 ```
 
 ### Encrypted Request Body
@@ -204,13 +204,13 @@ import CryptoSwift // For .bytes alias
 }
 """
 
-guard var Request = Request(
+guard var Request = try? Request(
     secretKey: kp.secretKey
 ) else {
-    // Handle initializatiojn errors
+    // Handle init errors
 }
 
-guard let cipher = try? request.encrypt(
+guard let cipher = try? request!.encrypt(
     request: payload.data(using: .utf8, allowLossyConversion: false)!,
     publicKey: publicKey // 32 byte public key from server
 ) else {
@@ -229,13 +229,13 @@ Responses from the server can be decrypted as follows:
 ```swift
 import CryptoSwift // For .bytes alias
 
-guard let response = Response(
+guard let response = try? Response(
     secretKey: kp.secretKey
 ) else {
     // Handle initialization errors
 }
 
-guard let decrypted = try? response.decrypt(
+guard let decrypted = try? response!.decrypt(
     response: Data(base64Encoded: "")!.bytes, // The raw body provided in the servers http response
 ) else {
     // Handle errors
