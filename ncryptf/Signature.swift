@@ -19,9 +19,8 @@ extension Signature {
      - Returns: The signature string
     */
     public func derive(httpMethod: String, uri: String, salt: Bytes, date: Date, payload: Data, version: Int? = 2) -> String {
-        
         let method = httpMethod.uppercased()
-        
+
         let hash = getSignatureHash(
             data: payload,
             salt: salt,

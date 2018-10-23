@@ -26,7 +26,7 @@ public struct Request {
         if signatureSecretKey.count != self.sodium.sign.SecretKeyBytes {
             throw ncryptfError.invalidArgument
         }
-        
+
         self.signatureSecretKey = signatureSecretKey
     }
 }
@@ -49,7 +49,7 @@ extension Request {
     public mutating func encrypt(request: Data, publicKey: Bytes, version: Int? = 2, nonce: Bytes? = nil) throws -> Bytes? {
         self.nonce = nonce ?? self.sodium.box.nonce()
 
-        if nonce!.count != 24 {
+        if self.nonce!.count != 24 {
             throw ncryptfError.invalidArgument
         }
 
@@ -74,13 +74,13 @@ extension Request {
 
                 let signature = try self.sign(request: request)
 
-                let payload = header! + 
+                let payload = header! +
                     self.nonce! +
                     publicKey +
                     body! +
                     sigPubKey +
                     signature!
-                
+
                 let checksum = self.sodium.genericHash.hash(message: payload, key: self.nonce!, outputLength: 64)
 
                 return payload + checksum!

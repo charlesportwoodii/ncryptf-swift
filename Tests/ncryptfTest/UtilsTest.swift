@@ -5,7 +5,6 @@ import CryptoSwift
 @testable import ncryptf
 
 class UtilsTest : XCTestCase {
-
     static let allTests = [
         ("testKeypairGeneration", testKeypairGeneration),
         ("testSigningKeypairGeneration", testSigningKeypairGeneration),
@@ -13,7 +12,7 @@ class UtilsTest : XCTestCase {
     ]
 
     override func setUp() {
-        super.setUp() 
+        super.setUp()
     }
 
     override func tearDown() {

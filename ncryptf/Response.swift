@@ -4,7 +4,7 @@ import Sodium
 public struct Response {
     private var secretKey: Bytes
     private let sodium = Sodium()
-    
+
     /**
      Constructs a new response object
      - Parameters:
@@ -143,7 +143,7 @@ extension Response {
      - Returns: Will return true if the signature is valid, and false otherwise
     */
     public func isSignatureValid(response: Bytes, signature: Bytes, publicKey: Bytes) throws -> Bool {
-        
+
         if signature.count != 64 {
             throw ncryptfError.invalidArgument
         }
@@ -178,6 +178,30 @@ extension Response {
             }
 
             return Array(response[28..<60])
+        }
+
+        throw ncryptfError.invalidArgument
+    }
+
+    /**
+     Extracts the signing public key from the response
+     - Parameters:
+        - response: Raw response returned by server
+     - Returns: 32 public key bytes
+     - Throws: `ncryptfError.invalidArgument`
+                If the response length is too short.
+    */
+    public static func getSigningPublicKeyFromResponse(response: Bytes) throws -> Bytes? {
+        guard let version = try? Response.getVersion(response: response) else {
+            throw ncryptfError.invalidArgument
+        }
+
+        if version == 2 {
+            if response.count < 236 {
+                throw ncryptfError.invalidArgument
+            }
+
+            return Array(response[(response.count - 160)..<((response.count - 160) + 32)])
         }
 
         throw ncryptfError.invalidArgument

@@ -26,7 +26,7 @@ extension Keypair {
         if publicKey.count % 4 != 0 {
             throw ncryptfError.invalidArgument
         }
-        
+
         self.publicKey = publicKey;
     }
 

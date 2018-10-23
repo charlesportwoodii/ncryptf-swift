@@ -74,7 +74,7 @@ extension Authorization {
     public func getDateString() -> String? {
         return DateFormatter.rfc1123.string(from: date)
     }
-    
+
     /**
      - Returns: 32 byte HMAC byte array
     */

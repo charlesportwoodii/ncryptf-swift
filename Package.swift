@@ -9,8 +9,10 @@ let package = Package(
         .library(name: "ncryptf", targets: ["ncryptf"])
     ],
     dependencies: [
-        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMinor(from: "0.9.0")),
-        .package(url: "https://github.com/jedisct1/swift-sodium.git", .branch("master"))
+        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMinor(from: "0.13.0")),
+        .package(url: "https://github.com/jedisct1/swift-sodium.git", .upToNextMinor(from: "0.7.0")),
+        .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMinor(from: "4.7.3")),
+        .package(url: "https://github.com/onevcat/Rainbow", from: "3.0.0")
     ],
     targets: [
         .target(
@@ -20,7 +22,7 @@ let package = Package(
         ),
         .testTarget(
             name: "ncryptfTest",
-            dependencies: ["ncryptf"]
+            dependencies: ["ncryptf", "Alamofire", "Rainbow"]
         )
     ]
 )

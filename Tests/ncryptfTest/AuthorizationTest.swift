@@ -12,7 +12,6 @@ internal struct Auth: Codable {
 }
 
 class AuthorizationTest : XCTestCase {
-    
     static let allTests = [
         ("testV1HMAC", testV1HMAC),
         ("testV2HMAC", testV2HMAC),
@@ -52,7 +51,7 @@ class AuthorizationTest : XCTestCase {
         signature: Data(base64Encoded: "7v/CdiGoEI7bcj7R2EyDPH5nrCd2+7rHYNACB+Kf2FMx405und2KenGjNpCBPv0jOiptfHJHiY3lldAQTGCdqw==")!,
         expiresAt: Date().adding( minutes: (4 * 60)).timeIntervalSince1970
     )
-    
+
     let testCases = [
         TestCase(httpMethod: "GET", uri: "/api/v1/test", payload: "".toData()),
         TestCase(httpMethod: "GET", uri: "/api/v1/test?foo=bar", payload: "".toData()),
@@ -66,7 +65,7 @@ class AuthorizationTest : XCTestCase {
     ]
 
     override func setUp() {
-        super.setUp() 
+        super.setUp()
     }
 
     override func tearDown() {
@@ -115,7 +114,7 @@ class AuthorizationTest : XCTestCase {
                 let header = auth.getHeader()!
                 let decoder = JSONDecoder()
                 let a = try? decoder.decode(
-                    Auth.self, 
+                    Auth.self,
                     from: Data(
                         base64Encoded: String(header.replacingOccurrences(
                             of: "HMAC ",

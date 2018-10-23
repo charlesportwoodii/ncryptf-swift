@@ -5,7 +5,7 @@ extension String {
     func toData() -> Data? {
         return self.data(using: .utf8, allowLossyConversion: false)
     }
-    
+
     var lines: [String] {
         return self.components(separatedBy: "\n")
     }

@@ -3,7 +3,6 @@ import Foundation
 @testable import ncryptf
 
 class SignatureTest : XCTestCase {
-
     static let allTests = [
         ("testV1Signatures", testV1Signatures),
         ("testV2Signatures", testV2Signatures)
@@ -42,7 +41,7 @@ class SignatureTest : XCTestCase {
         signature: Data(base64Encoded: "7v/CdiGoEI7bcj7R2EyDPH5nrCd2+7rHYNACB+Kf2FMx405und2KenGjNpCBPv0jOiptfHJHiY3lldAQTGCdqw==")!,
         expiresAt: Date().adding( minutes: (4 * 60)).timeIntervalSince1970
     )
-    
+
     let testCases = [
         TestCase(httpMethod: "GET", uri: "/api/v1/test", payload: "".toData()),
         TestCase(httpMethod: "GET", uri: "/api/v1/test?foo=bar", payload: "".toData()),
@@ -56,7 +55,7 @@ class SignatureTest : XCTestCase {
     ]
 
     override func setUp() {
-        super.setUp() 
+        super.setUp()
     }
 
     override func tearDown() {
@@ -74,7 +73,7 @@ class SignatureTest : XCTestCase {
                 version: 1
             )
 
-            let hash = signature.lines.first!            
+            let hash = signature.lines.first!
             XCTAssertEqual(hash, v1SignatureResults[index])
         }
     }
@@ -89,7 +88,7 @@ class SignatureTest : XCTestCase {
                 payload: testCase.payload!,
                 version: 2
             )
-         
+
             let hash = signature.lines.first!
             XCTAssertEqual(hash, v2SignatureResults[index])
         }
