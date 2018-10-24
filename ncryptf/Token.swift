@@ -1,12 +1,13 @@
 import Foundation
 import Sodium
+import Clibsodium
 
 public struct Token {
-    public var accessToken: String
-    public var refreshToken: String
-    public var ikm: Bytes
-    public var signature: Bytes
-    public var expiresAt: Double
+    public let accessToken: String
+    public let refreshToken: String
+    public let ikm: Bytes
+    public let signature: Bytes
+    public let expiresAt: Double
 }
 
 extension Token {
@@ -44,5 +45,18 @@ extension Token {
     public func isExpired() -> Bool {
         let now = Date().timeIntervalSince1970;
         return now > expiresAt
+    }
+
+    /**
+     Extracts the signature public key from the secret key
+     - Returns: Bytes?
+    */
+    public func getSignaturePublicKey() -> Bytes? {
+        var sigPubKey = Array<UInt8>(repeating: 0, count: 32)
+        if crypto_sign_ed25519_sk_to_pk(&sigPubKey, self.signature) != 0 {
+            return nil
+        }
+
+        return sigPubKey
     }
 }
