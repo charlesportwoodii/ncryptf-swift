@@ -1,6 +1,7 @@
 import Foundation
 import Sodium
 import CryptoSwift
+import HKDF
 
 public struct Authorization {
     private var token: Token
@@ -49,9 +50,13 @@ extension Authorization {
         )
 
         do {
-            let info: [UInt8] = Array(AUTH_INFO.utf8)
-            let hkdf = try HKDF(password: token.ikm, salt: salt, info: info, variant: VARIANT)
-                .calculate()
+            let hkdf = deriveKey(
+                algorithm: .sha256,
+                seed: Data(bytes: token.ikm, count: token.ikm.count),
+                info: AUTH_INFO.data(using: .utf8),
+                salt: Data(bytes: self.salt, count: self.salt.count),
+                count: 32
+            )
 
             let signatureBytes: [UInt8] = Array(signature.utf8)
             self.hmac = try HMAC(key: hkdf.toHexString(), variant: VARIANT)

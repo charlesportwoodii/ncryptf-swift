@@ -399,8 +399,6 @@ class IntegrationTest : XCTestCase {
             return XCTFail("Unable to instantiate response object.")
         }
 
-        print(response.bodyString)
-
         let responseBody: Bytes = Data(base64Encoded: response.bodyString)!.bytes
         guard let message: Data? = try? r.decrypt(response: responseBody) else {
             return XCTFail("Unable to decrypt string.")
