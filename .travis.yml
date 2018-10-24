@@ -27,6 +27,7 @@ addons:
       - ca-certificates
       - libicu-dev
       - libstdc++6
+      - libcurl4-openssl-dev
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
