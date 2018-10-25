@@ -85,9 +85,9 @@ class IntegrationTest : XCTestCase {
      This also handles definition of all environment variables
      */
     override func invokeTest() {
-        //#if os(Linux)
+        #if os(Linux)
             print("This test cannot run on Linux, skipping ---".yellow)
-        //#endif
+        #endif
 
         let environment = ProcessInfo().environment
         if let url = environment["NCRYPTF_TEST_API"] {
