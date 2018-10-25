@@ -3,7 +3,7 @@ import Foundation
 import CryptoSwift
 import Sodium
 import Rainbow
-import PerfectCURL
+import Alamofire
 @testable import ncryptf
 
 internal struct EKB: Codable {
@@ -85,6 +85,10 @@ class IntegrationTest : XCTestCase {
      This also handles definition of all environment variables
      */
     override func invokeTest() {
+        //#if os(Linux)
+            print("This test cannot run on Linux, skipping ---".yellow)
+        //#endif
+
         let environment = ProcessInfo().environment
         if let url = environment["NCRYPTF_TEST_API"] {
             self.url = url
@@ -119,51 +123,58 @@ class IntegrationTest : XCTestCase {
      */
     func testEphemeralKeyBootstrap()
     {
-        let request = CURLRequest(
-            (self.url! + "/ek"),
-            .addHeader(CURLRequest.Header.Name.accept, "application/vnd.ncryptf+json"),
-            .addHeader(CURLRequest.Header.Name.custom(name: "Content-Type"), "application/vnd.ncryptf+json")
-        )
+        let e = expectation(description: "Alamofire")
+
+        var headers: HTTPHeaders = [
+            "Accept": "application/vnd.ncryptf+json",
+            "Content-Type": "application/vnd.ncryptf+json"
+        ]
 
         if self.token != nil {
-            request.addHeader(CURLRequest.Header.Name.custom(name: "X-Access-Token"), value: self.token!)
+            headers["X-Access-Token"] = self.token!
         }
 
         let publicKey: String = Data(
             bytes: self.key!.getPublicKey(),
             count: self.key!.getPublicKey().count
         ).base64EncodedString()
-        request.addHeader(CURLRequest.Header.Name.custom(name: "x-pubkey"), value: publicKey)
 
-        guard let response = try? request.perform() else {
-            return XCTFail("Server did not provide response.")
+        headers["x-pubkey"] = publicKey
+
+        let request = Alamofire.request(
+            self.url! + "/ek",
+            headers: headers
+        )
+
+        request.responseString { response in
+            XCTAssertEqual(200, response.response?.statusCode)
+
+            guard let r: Response = try? Response(secretKey: self.key!.getSecretKey()) else {
+                return XCTFail("Unable to instantiate response object.")
+            }
+
+            let responseBody: Bytes = Data(base64Encoded: response.result.value!)!.bytes
+            guard let message: Data? = try? r.decrypt(response: responseBody) else {
+                return XCTFail("Unable to decrypt string.")
+            }
+
+            let decoder = JSONDecoder()
+            guard let json = try? decoder.decode(
+                Boostrap.self,
+                from: message!
+            ) else {
+                return XCTFail("JSON parsing failed")
+            }
+
+            XCTAssertNotNil(json)
+            XCTAssertNotNil(json.pk)
+            XCTAssertNotNil(json.hashid)
+            XCTAssertNotNil(json.signature)
+
+            self.ephemeralKeyBootstrap = EKB(key: Data(base64Encoded: json.pk)!.bytes, hashid: json.hashid)
+            e.fulfill()
         }
-
-        XCTAssertEqual(200, response.responseCode)
-
-        guard let r: Response = try? Response(secretKey: self.key!.getSecretKey()) else {
-            return XCTFail("Unable to instantiate response object.")
-        }
-
-        let responseBody: Bytes = Data(base64Encoded: response.bodyString)!.bytes
-        guard let message: Data? = try? r.decrypt(response: responseBody) else {
-            return XCTFail("Unable to decrypt string.")
-        }
-
-        let decoder = JSONDecoder()
-        guard let json = try? decoder.decode(
-            Boostrap.self,
-            from: message!
-        ) else {
-            return XCTFail("JSON parsing failed")
-        }
-
-        XCTAssertNotNil(json)
-        XCTAssertNotNil(json.pk)
-        XCTAssertNotNil(json.hashid)
-        XCTAssertNotNil(json.signature)
-
-        self.ephemeralKeyBootstrap = EKB(key: Data(base64Encoded: json.pk)!.bytes, hashid: json.hashid)
+        waitForExpectations(timeout: 5.0, handler: nil)
     }
 
     /**
@@ -176,7 +187,24 @@ class IntegrationTest : XCTestCase {
             return XCTFail("EphemeralKeyBoostrap operation failed.")
         }
 
-        guard var req: Request = try? Request(
+        let e = expectation(description: "Alamofire")
+
+        var headers: HTTPHeaders = [
+            "Accept": "application/vnd.ncryptf+json",
+            "Content-Type": "application/vnd.ncryptf+json"
+        ]
+
+        if self.token != nil {
+            headers["X-Access-Token"] = self.token!
+        }
+
+        // Our public is is embedded in the signed request, so we don't need to explicitly tell
+        // the server what our public key is via this header. Implementors may wish to always include this for convenience
+        // If a public key is embedded in the body, it will supercede whatever is in the header.
+        //headers["x-pubkey"] = publicKey
+        headers["X-HashId"] = stack.hashid
+
+        guard var req: ncryptf.Request = try? ncryptf.Request(
             secretKey: self.key!.getSecretKey(),
             signatureSecretKey: try! Utils.generateSigningKeypair().getSecretKey()
         ) else {
@@ -196,41 +224,31 @@ class IntegrationTest : XCTestCase {
             count: encrypted!.count
         ).base64EncodedString()
 
-        let request = CURLRequest(
-            (self.url! + "/echo"),
-            .httpMethod(.post),
-            .postString(encryptedPayload),
-            .addHeader(CURLRequest.Header.Name.accept, "application/vnd.ncryptf+json"),
-            .addHeader(CURLRequest.Header.Name.custom(name: "Content-Type"), "application/vnd.ncryptf+json")
+        let request = Alamofire.request(
+            self.url! + "/echo",
+            method: .post,
+            parameters: [:],
+            encoding: encryptedPayload,
+            headers: headers
         )
 
-        if self.token != nil {
-            request.addHeader(CURLRequest.Header.Name.custom(name: "X-Access-Token"), value: self.token!)
+        request.responseString { response in
+            XCTAssertEqual(200, response.response?.statusCode)
+
+            guard let r: Response = try? Response(secretKey: self.key!.getSecretKey()) else {
+                return XCTFail("Unable to instantiate response object.")
+            }
+
+            let responseBody: Bytes = Data(base64Encoded: response.result.value!)!.bytes
+            guard let message: Data? = try? r.decrypt(response: responseBody) else {
+                return XCTFail("Unable to decrypt string.")
+            }
+
+            XCTAssertEqual(payload, message!.toString()!)
+            e.fulfill()
         }
 
-        request.addHeader(CURLRequest.Header.Name.custom(name: "X-HashId"), value: stack.hashid)
-
-        // Our public is is embedded in the signed request, so we don't need to explicitly tell
-        // the server what our public key is via this header. Implementors may wish to always include this for convenience
-        // If a public key is embedded in the body, it will supercede whatever is in the header.
-        //request.addHeader(CURLRequest.Header.Name.custom(name: "x-pubkey"), value: publicKey)
-
-        guard let response = try? request.perform() else {
-            return XCTFail("Server did not provide response.")
-        }
-
-        XCTAssertEqual(200, response.responseCode)
-
-        guard let r: Response = try? Response(secretKey: self.key!.getSecretKey()) else {
-            return XCTFail("Unable to instantiate response object.")
-        }
-
-        let responseBody: Bytes = Data(base64Encoded: response.bodyString)!.bytes
-        guard let message: Data? = try? r.decrypt(response: responseBody) else {
-            return XCTFail("Unable to decrypt string.")
-        }
-
-        XCTAssertEqual(payload, message!.toString()!)
+        waitForExpectations(timeout: 5.0, handler: nil)
     }
 
     /**
@@ -244,7 +262,24 @@ class IntegrationTest : XCTestCase {
             return XCTFail("EphemeralKeyBoostrap operation failed.")
         }
 
-        guard var req: Request = try? Request(
+        let e = expectation(description: "Alamofire")
+
+        var headers: HTTPHeaders = [
+            "Accept": "application/vnd.ncryptf+json",
+            "Content-Type": "application/vnd.ncryptf+json"
+        ]
+
+        if self.token != nil {
+            headers["X-Access-Token"] = self.token!
+        }
+
+        // Our public is is embedded in the signed request, so we don't need to explicitly tell
+        // the server what our public key is via this header. Implementors may wish to always include this for convenience
+        // If a public key is embedded in the body, it will supercede whatever is in the header.
+        //headers["x-pubkey"] = publicKey
+        headers["X-HashId"] = stack.hashid
+
+        guard var req: ncryptf.Request = try? ncryptf.Request(
             secretKey: self.key!.getSecretKey(),
             signatureSecretKey: try! Utils.generateSigningKeypair().getSecretKey()
         ) else {
@@ -264,68 +299,61 @@ class IntegrationTest : XCTestCase {
             count: encrypted!.count
         ).base64EncodedString()
 
-        let request = CURLRequest(
-            (self.url! + "/authenticate"),
-            .httpMethod(.post),
-            .postString(encryptedPayload),
-            .addHeader(CURLRequest.Header.Name.accept, "application/vnd.ncryptf+json"),
-            .addHeader(CURLRequest.Header.Name.custom(name: "Content-Type"), "application/vnd.ncryptf+json")
+        let request = Alamofire.request(
+            self.url! + "/authenticate",
+            method: .post,
+            parameters: [:],
+            encoding: encryptedPayload,
+            headers: headers
         )
 
-        if self.token != nil {
-            request.addHeader(CURLRequest.Header.Name.custom(name: "X-Access-Token"), value: self.token!)
+        request.responseString { response in
+            XCTAssertEqual(200, response.response?.statusCode)
+
+            guard let r: Response = try? Response(secretKey: self.key!.getSecretKey()) else {
+                return XCTFail("Unable to instantiate response object.")
+            }
+
+            let responseBody: Bytes = Data(base64Encoded: response.result.value!)!.bytes
+            guard let message: Data? = try? r.decrypt(response: responseBody) else {
+                return XCTFail("Unable to decrypt string.")
+            }
+
+            let decoder = JSONDecoder()
+            guard let json = try? decoder.decode(
+                AuthResponse.self,
+                from: message!
+            ) else {
+                return XCTFail("JSON parsing failed")
+            }
+
+            XCTAssertNotNil(json)
+            XCTAssertNotNil(json.accessToken)
+            XCTAssertNotNil(json.refreshToken)
+            XCTAssertNotNil(json.ikm)
+            XCTAssertNotNil(json.signing)
+            XCTAssertNotNil(json.expiresAt)
+
+            guard let t: Token = try? Token(
+                accessToken: json.accessToken,
+                refreshToken: json.refreshToken,
+                ikm: Data(base64Encoded: json.ikm)!,
+                signature:  Data(base64Encoded: json.signing)!,
+                expiresAt: json.expiresAt
+            ) else {
+                return XCTFail("Unable to generate ncryptf Token.")
+            }
+
+            self.authToken = t
+            e.fulfill()
         }
 
-        request.addHeader(CURLRequest.Header.Name.custom(name: "X-HashId"), value: stack.hashid)
-
-        // Our public is is embedded in the signed request, so we don't need to explicitly tell
-        // the server what our public key is via this header. Implementors may wish to always include this for convenience
-        // If a public key is embedded in the body, it will supercede whatever is in the header.
-        //request.addHeader(CURLRequest.Header.Name.custom(name: "x-pubkey"), value: publicKey)
-
-        guard let response = try? request.perform() else {
-            return XCTFail("Server did not provide response.")
-        }
-
-        XCTAssertEqual(200, response.responseCode)
-
-        guard let r: Response = try? Response(secretKey: self.key!.getSecretKey()) else {
-            return XCTFail("Unable to instantiate response object.")
-        }
-
-        let responseBody: Bytes = Data(base64Encoded: response.bodyString)!.bytes
-        guard let message: Data? = try? r.decrypt(response: responseBody) else {
-            return XCTFail("Unable to decrypt string.")
-        }
-
-        let decoder = JSONDecoder()
-        guard let json = try? decoder.decode(
-            AuthResponse.self,
-            from: message!
-        ) else {
-            return XCTFail("JSON parsing failed")
-        }
-
-        XCTAssertNotNil(json)
-        XCTAssertNotNil(json.accessToken)
-        XCTAssertNotNil(json.refreshToken)
-        XCTAssertNotNil(json.ikm)
-        XCTAssertNotNil(json.signing)
-        XCTAssertNotNil(json.expiresAt)
-
-        guard let t: Token = try? Token(
-            accessToken: json.accessToken,
-            refreshToken: json.refreshToken,
-            ikm: Data(base64Encoded: json.ikm)!,
-            signature:  Data(base64Encoded: json.signing)!,
-            expiresAt: json.expiresAt
-        ) else {
-            return XCTFail("Unable to generate ncryptf Token.")
-        }
-
-        self.authToken = t
+        waitForExpectations(timeout: 5.0, handler: nil)
     }
 
+    /**
+     This test performs an authenticated encrypted request and decrypts an encrypted response
+     */
     func testAuthenticatedEchoWithEncryptedRequest()
     {
         self.testAuthenticateWithEncryptedRequest()
@@ -337,7 +365,24 @@ class IntegrationTest : XCTestCase {
             return XCTFail("Unable to extract token from prior response.")
         }
 
-        guard var req: Request = try? Request(
+        let e = expectation(description: "Alamofire")
+
+        var headers: HTTPHeaders = [
+            "Accept": "application/vnd.ncryptf+json",
+            "Content-Type": "application/vnd.ncryptf+json"
+        ]
+
+        if self.token != nil {
+            headers["X-Access-Token"] = self.token!
+        }
+
+        // Our public is is embedded in the signed request, so we don't need to explicitly tell
+        // the server what our public key is via this header. Implementors may wish to always include this for convenience
+        // If a public key is embedded in the body, it will supercede whatever is in the header.
+        //headers["x-pubkey"] = publicKey
+        headers["X-HashId"] = stack.hashid
+
+        guard var req: ncryptf.Request = try? ncryptf.Request(
             secretKey: self.key!.getSecretKey(),
             signatureSecretKey: t.signature
         ) else {
@@ -345,7 +390,6 @@ class IntegrationTest : XCTestCase {
         }
 
         let payload: String = "{\"hello\":\"world\"}"
-
         guard let encrypted : Bytes? = try? req.encrypt(
             request: payload.toData()!,
             publicKey: stack.key
@@ -358,25 +402,6 @@ class IntegrationTest : XCTestCase {
             count: encrypted!.count
         ).base64EncodedString()
 
-        let request = CURLRequest(
-            (self.url! + "/echo"),
-            .httpMethod(.put),
-            .postString(encryptedPayload),
-            .addHeader(CURLRequest.Header.Name.accept, "application/vnd.ncryptf+json"),
-            .addHeader(CURLRequest.Header.Name.custom(name: "Content-Type"), "application/vnd.ncryptf+json")
-        )
-
-        if self.token != nil {
-            request.addHeader(CURLRequest.Header.Name.custom(name: "X-Access-Token"), value: self.token!)
-        }
-
-        request.addHeader(CURLRequest.Header.Name.custom(name: "X-HashId"), value: stack.hashid)
-
-        // Our public is is embedded in the signed request, so we don't need to explicitly tell
-        // the server what our public key is via this header. Implementors may wish to always include this for convenience
-        // If a public key is embedded in the body, it will supercede whatever is in the header.
-        //request.addHeader(CURLRequest.Header.Name.custom(name: "x-pubkey"), value: publicKey)
-
         guard let auth: Authorization = try? Authorization(
             httpMethod: "PUT",
             uri: "/echo",
@@ -387,36 +412,53 @@ class IntegrationTest : XCTestCase {
             return XCTFail("Unable to generate Authorization header.")
         }
 
-        request.addHeader(CURLRequest.Header.Name.custom(name: "Authorization"), value: auth.getHeader()!)
+        headers["Authorization"] = auth.getHeader()!
 
-        guard let response = try? request.perform() else {
-            return XCTFail("Server did not provide response.")
+        let request = Alamofire.request(
+            self.url! + "/echo",
+            method: .put,
+            parameters: [:],
+            encoding: encryptedPayload,
+            headers: headers
+        )
+
+        request.responseString { response in
+            XCTAssertEqual(200, response.response?.statusCode)
+
+            guard let r: Response = try? Response(secretKey: self.key!.getSecretKey()) else {
+                return XCTFail("Unable to instantiate response object.")
+            }
+
+            let responseBody: Bytes = Data(base64Encoded: response.result.value!)!.bytes
+            guard let message: Data? = try? r.decrypt(response: responseBody) else {
+                return XCTFail("Unable to decrypt string.")
+            }
+
+            /**
+             * As an added integrity check, the API will sign the message with the same key it issued during authentication
+             * Therefore, we can verify that the signing public key associated to the message matches the public key from the
+             * token we were issued.
+             *
+             * If the keys match, then we have assurance that the message is authenticated
+             * If the keys don't match, then the request has been tampered with and should be discarded.
+             *
+             * This check should ALWAYS be performed for authenticated requests as it ensures the validity of the message
+             * and the origin of the message.
+             */
+            let sodium = Sodium()
+
+            if (!sodium.utils.equals(
+                t.getSignaturePublicKey()!,
+                try! ncryptf.Response.getSigningPublicKeyFromResponse(response: responseBody)!
+            )) {
+                return XCTFail("Signature public key mismatch")
+            }
+            XCTAssertEqual(payload, message!.toString()!)
+
+            e.fulfill()
         }
 
-        XCTAssertEqual(200, response.responseCode)
-
-        guard let r: Response = try? Response(secretKey: self.key!.getSecretKey()) else {
-            return XCTFail("Unable to instantiate response object.")
-        }
-
-        let responseBody: Bytes = Data(base64Encoded: response.bodyString)!.bytes
-        guard let message: Data? = try? r.decrypt(response: responseBody) else {
-            return XCTFail("Unable to decrypt string.")
-        }
-
-        /**
-         * As an added integrity check, the API will sign the message with the same key it issued during authentication
-         * Therefore, we can verify that the signing public key associated to the message matches the public key from the
-         * token we were issued.
-         *
-         * If the keys match, then we have assurance that the message is authenticated
-         * If the keys don't match, then the request has been tampered with and should be discarded.
-         *
-         * This check should ALWAYS be performed for authenticated requests as it ensures the validity of the message
-         * and the origin of the message.
-         */
-
-        XCTAssertEqual(payload, message!.toString()!)
+        waitForExpectations(timeout: 5.0, handler: nil)
     }
 
     /************************************************************************************************
@@ -425,6 +467,11 @@ class IntegrationTest : XCTestCase {
      * for other client implementations
      *
      ************************************************************************************************/
+
+    /**
+     This test verifies that authenticated requests requires a signature by the API issued
+     signature key instead of a randomly generated one.
+     */
     func testAuthenticatedEchoWithBadSignature()
     {
         self.testAuthenticateWithEncryptedRequest()
@@ -436,15 +483,31 @@ class IntegrationTest : XCTestCase {
             return XCTFail("Unable to extract token from prior response.")
         }
 
-        guard var req: Request = try? Request(
+        let e = expectation(description: "Alamofire")
+
+        var headers: HTTPHeaders = [
+            "Accept": "application/vnd.ncryptf+json",
+            "Content-Type": "application/vnd.ncryptf+json"
+        ]
+
+        if self.token != nil {
+            headers["X-Access-Token"] = self.token!
+        }
+
+        // Our public is is embedded in the signed request, so we don't need to explicitly tell
+        // the server what our public key is via this header. Implementors may wish to always include this for convenience
+        // If a public key is embedded in the body, it will supercede whatever is in the header.
+        //headers["x-pubkey"] = publicKey
+        headers["X-HashId"] = stack.hashid
+
+        guard var req: ncryptf.Request = try? ncryptf.Request(
             secretKey: self.key!.getSecretKey(),
-            signatureSecretKey: try! Utils.generateSigningKeypair().getSecretKey()
+            signatureSecretKey: Utils.generateSigningKeypair().getSecretKey()
         ) else {
             return XCTFail("Unable to create encrypted request.")
         }
 
         let payload: String = "{\"hello\":\"world\"}"
-
         guard let encrypted : Bytes? = try? req.encrypt(
             request: payload.toData()!,
             publicKey: stack.key
@@ -457,24 +520,90 @@ class IntegrationTest : XCTestCase {
             count: encrypted!.count
         ).base64EncodedString()
 
-        let request = CURLRequest(
-            (self.url! + "/echo"),
-            .httpMethod(.put),
-            .postString(encryptedPayload),
-            .addHeader(CURLRequest.Header.Name.accept, "application/vnd.ncryptf+json"),
-            .addHeader(CURLRequest.Header.Name.custom(name: "Content-Type"), "application/vnd.ncryptf+json")
-        )
-
-        if self.token != nil {
-            request.addHeader(CURLRequest.Header.Name.custom(name: "X-Access-Token"), value: self.token!)
+        guard let auth: Authorization = try? Authorization(
+            httpMethod: "PUT",
+            uri: "/echo",
+            token: t,
+            date: Date(),
+            payload: payload.toData()!
+        ) else {
+            return XCTFail("Unable to generate Authorization header.")
         }
 
-        request.addHeader(CURLRequest.Header.Name.custom(name: "X-HashId"), value: stack.hashid)
+        headers["Authorization"] = auth.getHeader()!
+
+        let request = Alamofire.request(
+            self.url! + "/echo",
+            method: .put,
+            parameters: [:],
+            encoding: encryptedPayload,
+            headers: headers
+        )
+
+        request.responseString { response in
+            XCTAssertEqual(401, response.response?.statusCode)
+            e.fulfill()
+        }
+
+        waitForExpectations(timeout: 5.0, handler: nil)
+    }
+
+    /**
+     This test verifies that a malformed payload is rejected by the API
+    */
+    func testMalformedEncryptedRequest()
+    {
+        self.testAuthenticateWithEncryptedRequest()
+        guard let stack: EKB = self.ephemeralKeyBootstrap else {
+            return XCTFail("EphemeralKeyBoostrap operation failed.")
+        }
+
+        guard let t: Token = self.authToken else {
+            return XCTFail("Unable to extract token from prior response.")
+        }
+
+        let e = expectation(description: "Alamofire")
+
+        var headers: HTTPHeaders = [
+            "Accept": "application/vnd.ncryptf+json",
+            "Content-Type": "application/vnd.ncryptf+json"
+        ]
+
+        if self.token != nil {
+            headers["X-Access-Token"] = self.token!
+        }
 
         // Our public is is embedded in the signed request, so we don't need to explicitly tell
         // the server what our public key is via this header. Implementors may wish to always include this for convenience
         // If a public key is embedded in the body, it will supercede whatever is in the header.
-        //request.addHeader(CURLRequest.Header.Name.custom(name: "x-pubkey"), value: publicKey)
+        //headers["x-pubkey"] = publicKey
+        headers["X-HashId"] = stack.hashid
+
+        guard var req: ncryptf.Request = try? ncryptf.Request(
+            secretKey: self.key!.getSecretKey(),
+            signatureSecretKey: Utils.generateSigningKeypair().getSecretKey()
+        ) else {
+            return XCTFail("Unable to create encrypted request.")
+        }
+
+        let payload: String = "{\"hello\":\"world\"}"
+        guard let encrypted : Bytes? = try? req.encrypt(
+            request: payload.toData()!,
+            publicKey: stack.key
+        ) else {
+            return XCTFail("Unable to encrypt payload.")
+        }
+
+        // Zero a 32 byte segment to corrupt the payload
+        var dEncrypted = encrypted!
+        for i in 60..<92 {
+            dEncrypted[i] = UInt8(0)
+        }
+
+        let encryptedPayload: String = Data(
+            bytes: dEncrypted,
+            count: dEncrypted.count
+        ).base64EncodedString()
 
         guard let auth: Authorization = try? Authorization(
             httpMethod: "PUT",
@@ -486,17 +615,21 @@ class IntegrationTest : XCTestCase {
             return XCTFail("Unable to generate Authorization header.")
         }
 
-        request.addHeader(CURLRequest.Header.Name.custom(name: "Authorization"), value: auth.getHeader()!)
+        headers["Authorization"] = auth.getHeader()!
 
-        guard let response = try? request.perform() else {
-            return XCTFail("Server did not provide response.")
+        let request = Alamofire.request(
+            self.url! + "/echo",
+            method: .put,
+            parameters: [:],
+            encoding: encryptedPayload + "BABAC",
+            headers: headers
+        )
+
+        request.responseString { response in
+            XCTAssertEqual(400, response.response?.statusCode)
+            e.fulfill()
         }
 
-        XCTAssertEqual(401, response.responseCode)
-    }
-
-    func testMalformedEncryptedRequest()
-    {
-
+        waitForExpectations(timeout: 5.0, handler: nil)
     }
 }

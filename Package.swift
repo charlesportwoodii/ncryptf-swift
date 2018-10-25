@@ -12,7 +12,7 @@ let package = Package(
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMinor(from: "0.13.0")),
         .package(url: "https://github.com/jedisct1/swift-sodium.git", .upToNextMinor(from: "0.7.0")),
         .package(url: "https://github.com/onevcat/Rainbow", from: "3.0.0"),
-        .package(url: "https://github.com/PerfectlySoft/Perfect-CURL.git", .upToNextMinor(from: "3.0.7")),
+        .package(url: "https://github.com/Alamofire/Alamofire", .upToNextMinor(from: "4.7.3")),
         .package(url: "https://github.com/Bouke/HKDF/", .upToNextMinor(from: "3.1.0"))
     ],
     targets: [
@@ -23,7 +23,7 @@ let package = Package(
         ),
         .testTarget(
             name: "ncryptfTest",
-            dependencies: ["ncryptf", "PerfectCURL", "Rainbow"]
+            dependencies: ["ncryptf", "Alamofire", "Rainbow"]
         )
     ]
 )
