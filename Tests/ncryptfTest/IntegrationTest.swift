@@ -87,6 +87,7 @@ class IntegrationTest : XCTestCase {
     override func invokeTest() {
         #if os(Linux)
             print("This test cannot run on Linux, skipping ---".yellow)
+            return
         #endif
 
         let environment = ProcessInfo().environment
