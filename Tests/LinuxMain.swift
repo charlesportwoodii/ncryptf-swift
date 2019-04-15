@@ -6,5 +6,4 @@ XCTMain([
    testCase(AuthorizationTest.allTests),
    testCase(RequestResponseTest.allTests),
    testCase(UtilsTest.allTests)
-   testCase(IntegrationTest.allTests)
 ])
