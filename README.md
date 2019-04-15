@@ -2,12 +2,14 @@
 
 [![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/ncryptf/ncryptf-swift/blob/master/LICENSE.md)
 
-| OS    | Build Status |
-|-------|------|
+| OS / Swift | Build Status |
+|-----------|------|
 | Linux 4.1 | [![](http://badges.herokuapp.com/travis/ncryptf/ncryptf-swift?env=SWIFT_LINUX=4.1&label=build&branch=master&style=flat-square)](https://travis-ci.com/ncryptf/ncryptf-swift) |
 | Linux 4.2 | [![](http://badges.herokuapp.com/travis/ncryptf/ncryptf-swift?env=SWIFT_LINUX=4.2&label=build&branch=master&style=flat-square)](https://travis-ci.com/ncryptf/ncryptf-swift) |
+| Linux 5.0 | [![](http://badges.herokuapp.com/travis/ncryptf/ncryptf-swift?env=SWIFT_LINUX=5.0&label=build&branch=master&style=flat-square)](https://travis-ci.com/ncryptf/ncryptf-swift) |
 | MacOS 4.1 | [![](http://badges.herokuapp.com/travis/ncryptf/ncryptf-swift?env=SWIFT_OSX=4.1&label=build&branch=master&style=flat-square)](https://travis-ci.com/ncryptf/ncryptf-swift) |
 | MacOS 4.2 | [![](http://badges.herokuapp.com/travis/ncryptf/ncryptf-swift?env=SWIFT_OSX=4.2&label=build&branch=master&style=flat-square)](https://travis-ci.com/ncryptf/ncryptf-swift) |
+| MacOS 5.0 | [![](http://badges.herokuapp.com/travis/ncryptf/ncryptf-swift?env=SWIFT_OSX=5.0&label=build&branch=master&style=flat-square)](https://travis-ci.com/ncryptf/ncryptf-swift) |
 
 
 <center>

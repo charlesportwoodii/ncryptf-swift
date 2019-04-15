@@ -77,7 +77,7 @@ extension Response {
                 throw ncryptfError.decryptionFailed
             }
 
-            guard let isSignatureValid = try? self.isSignatureValid(response: decryptedPayload!.bytes, signature: signature, publicKey: sigPubKey) else {
+            guard let isSignatureValid = try? self.isSignatureValid(response: decryptedPayload.bytes, signature: signature, publicKey: sigPubKey) else {
                 throw ncryptfError.invalidSignature
             }
 

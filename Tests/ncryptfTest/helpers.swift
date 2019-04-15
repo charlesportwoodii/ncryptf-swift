@@ -1,6 +1,5 @@
 import Foundation
 import Sodium
-import Alamofire
 
 extension String {
     func toData() -> Data? {
@@ -24,6 +23,7 @@ extension Date {
     }
 }
 
+#if false
 extension String: ParameterEncoding {
     public func encode(_ urlRequest: URLRequestConvertible, with parameters: Parameters?) throws -> URLRequest {
         var request = try urlRequest.asURLRequest()
@@ -31,3 +31,4 @@ extension String: ParameterEncoding {
         return request
     }
 }
+#endif

@@ -1,3 +1,5 @@
+#if false
+
 import XCTest
 import Foundation
 import CryptoSwift
@@ -634,3 +636,5 @@ class IntegrationTest : XCTestCase {
         waitForExpectations(timeout: 5.0, handler: nil)
     }
 }
+
+#endif
